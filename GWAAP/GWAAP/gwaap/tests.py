@@ -21,6 +21,16 @@ from django.db.utils import IntegrityError
 
 class ModelTests(TestCase):
     
+    def getFreshApplicant(self, thisUsername="username"):
+        applicant = Applicant(username=thisUsername)
+#        applicant.save()
+#        ap = ApplicantProfile(user=applicant)
+#        ap.save()
+#        app = Application(applicant_profile=ap)
+#        app.save()
+        applicant.save()
+        return applicant
+    
     def test_00010_userExists(self):
         user = User()
         self.assertIsInstance(user, User)
@@ -85,10 +95,12 @@ class ModelTests(TestCase):
         self.assertEqual(apID, 1)
         
     def test_00100_applicantHasProfile(self):
-        applicant = Applicant.objects.create()
+        applicant = Applicant.objects.create(username="user")
+        applicant.save()
         appProfile = ApplicantProfile(user=applicant)
         appProfile.save()
-        applicant.save()
+        appProfile.application = Application(applicant_profile=appProfile)
+        appProfile.application.save()
         self.assertIsInstance(applicant.get_profile(), ApplicantProfile)
         
     def test_00101_gettingIdOfApplicant(self):
@@ -172,3 +184,22 @@ class ModelTests(TestCase):
         applicant.save()
         applicant = Applicant(username="applicant")
         self.assertRaises(IntegrityError, applicant.save)
+        
+    def test_00170_additionalProfileSaveTest(self):
+        app = Applicant(username="name")
+        app.save()
+        app.get_profile().user = None
+        ap = ApplicantProfile()
+        ap.user = app
+        ap.save()
+
+    def test_00180_applicantProfileHasApplication(self):
+        applicant = self.getFreshApplicant()
+        application = Application.objects.get(applicant_profile=applicant.get_profile())
+        self.assertIsInstance(application, Application)
+        
+    def testTrySignalProcessing(self):
+        applicant = Applicant(username="name")
+        applicant.save()
+        self.assertEqual(Application.objects.get(applicant_profile=applicant.get_profile()).intTest, 1)
+        
