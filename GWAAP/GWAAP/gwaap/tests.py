@@ -89,18 +89,12 @@ class ModelTests(TestCase):
     def test_00091_applicantProfileHasId(self):
         app = Applicant(username="applicant")
         app.save()
-        ap = ApplicantProfile(user=app)
-        ap.save()
-        apID = ap.id
+        apID = app.get_profile().id
         self.assertEqual(apID, 1)
         
     def test_00100_applicantHasProfile(self):
         applicant = Applicant.objects.create(username="user")
         applicant.save()
-        appProfile = ApplicantProfile(user=applicant)
-        appProfile.save()
-        appProfile.application = Application(applicant_profile=appProfile)
-        appProfile.application.save()
         self.assertIsInstance(applicant.get_profile(), ApplicantProfile)
         
     def test_00101_gettingIdOfApplicant(self):
@@ -133,29 +127,17 @@ class ModelTests(TestCase):
     def test_00120_makeTwoApplicantsWithProfiles(self):
         applicant = Applicant(username="mr. applicant")
         applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
-        applicant.save()
         applicant2 = Applicant(username="mrs. applicant")
         applicant2.save()
-        ap2 = ApplicantProfile(user=applicant2)
-        ap2.save()
-        applicant2.save()
-        self.assertEqual(ap2.id, 2)
+        self.assertEqual(applicant2.id, 2)
         
     def test_00130_makeSingleApplicant(self):
         applicant = Applicant(username="applicant")
-        applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
         applicant.save()
         self.assertIsInstance(applicant, Applicant)
 
     def test_00140_getApplicantById(self):
         applicant = Applicant(username="applicant")
-        applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
         applicant.save()
         appKey = Applicant.objects.get(username="applicant").pk
         self.assertEqual(appKey, 1)
@@ -163,18 +145,9 @@ class ModelTests(TestCase):
     def test_00150_getApplicantByIdMultipleApplicants(self):
         applicant = Applicant(username="applicant")
         applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
-        applicant.save()
         applicant = Applicant(username="applicant2")
         applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
-        applicant.save()
         applicant = Applicant(username="applicant3")
-        applicant.save()
-        ap = ApplicantProfile(user=applicant)
-        ap.save()
         applicant.save()
         appKey = Applicant.objects.get(username="applicant2").pk
         self.assertEqual(2, appKey)
@@ -185,10 +158,10 @@ class ModelTests(TestCase):
         applicant = Applicant(username="applicant")
         self.assertRaises(IntegrityError, applicant.save)
         
-    def test_00170_additionalProfileSaveTest(self):
+    def test_00170_deleteProfileAndCreateNewOne(self):
         app = Applicant(username="name")
         app.save()
-        app.get_profile().user = None
+        ApplicantProfile.objects.get(user=app).delete()
         ap = ApplicantProfile()
         ap.user = app
         ap.save()
@@ -198,8 +171,12 @@ class ModelTests(TestCase):
         application = Application.objects.get(applicant_profile=applicant.get_profile())
         self.assertIsInstance(application, Application)
         
-    def testTrySignalProcessing(self):
-        applicant = Applicant(username="name")
-        applicant.save()
-        self.assertEqual(Application.objects.get(applicant_profile=applicant.get_profile()).intTest, 1)
+#    def test_00190_trySignalProcessing(self):
+#        applicant = Applicant(username="name")
+#        applicant.save()
+#        self.assertEqual(Application.objects.get(applicant_profile=applicant.get_profile()).intTest, 1)
         
+    def test_00200_getApplicationConvenienceMethod(self):
+        applicant = Applicant(username="user")
+        applicant.save()
+        self.assertIsInstance(applicant.get_application(), Application)

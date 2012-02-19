@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 #from django.db.models.signals import post_save, pre_save
 
@@ -10,11 +10,12 @@ class User(User):
 
 class Applicant(User):
     pass
+    def get_application(self):
+        return Application.objects.get(applicant_profile=self.get_profile())
 
 class Application(models.Model):
     # It's in quotes b/c the ApplicantProfile class hasn't been defined yet at this point in parsing
     applicant_profile = models.ForeignKey('ApplicantProfile', unique=True)
-    intTest = models.IntegerField(default=1)
 
 class ApplicantProfile(models.Model):
     user = models.ForeignKey(Applicant, unique=True)
@@ -24,7 +25,7 @@ class ApplicantProfile(models.Model):
 def create_applicant(sender, instance, created, **kwargs):
     if created:
         applicantprofile = ApplicantProfile.objects.create(user=instance)
-        application = Application.objects.create(applicant_profile=applicantprofile)
+        Application.objects.create(applicant_profile=applicantprofile)
         
 #@receiver(post_save, sender=ApplicantProfile)
 #def create_application(sender, instance, created, **kwargs):
