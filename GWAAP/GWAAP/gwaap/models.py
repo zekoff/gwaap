@@ -19,9 +19,10 @@ class Application(models.Model):
 
 class ApplicantProfile(models.Model):
     user = models.ForeignKey(Applicant, unique=True)
+    # This line was the source of untold frustration
 #    application = models.ForeignKey(Application, unique=True)
     
-@receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_fix")
+@receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_bugfix")
 def create_applicant(sender, instance, created, **kwargs):
     if created:
         applicantprofile = ApplicantProfile.objects.create(user=instance)
