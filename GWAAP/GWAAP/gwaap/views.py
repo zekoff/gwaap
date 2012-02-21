@@ -9,3 +9,6 @@ def pagetest(request):
 def logintest(request):
     form = AuthenticationForm()
     return HttpResponse(form.__unicode__())
+
+def sandboxbranchview(request):
+    return HttpResponse(content="This is the sandbox")
