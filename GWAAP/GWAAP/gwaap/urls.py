@@ -7,8 +7,7 @@ from django.conf.urls.defaults import patterns, include, url
 urlpatterns = patterns('',
     # url(r'^$', 'GWAAP.views.home', name='home'),
     # url(r'^GWAAP/', include('GWAAP.foo.urls')),
+    
     # Full path to view b/c this is technically being called from one step up the tree
-    url(r'^sandbox/$', 'gwaap.views.sandboxbranchview'),
-    url(r'^login/$', 'gwaap.views.logintest'),
-    url(r'^$', 'gwaap.views.pagetest')
+    url(r'^user/$', 'gwaap.views.userActions')
 )

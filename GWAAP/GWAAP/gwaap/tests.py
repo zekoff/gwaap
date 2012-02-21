@@ -11,6 +11,8 @@ from django.test import TestCase
 from models import Applicant, Application, User
 import django.db.models
 from django.db.utils import IntegrityError
+from django.test.client import Client, RequestFactory
+from GWAAP.gwaap.views import userActions
 
 #class SimpleTest(TestCase):
 #    def test_basic_addition(self):
@@ -180,3 +182,45 @@ class ModelTests(TestCase):
         applicant = Applicant(username="user")
         applicant.save()
         self.assertIsInstance(applicant.get_application(), Application)
+
+class ViewTests(TestCase):
+    
+    def getRequest(self, address):
+        # This allows tests to skip the url.py file while testing
+        # BUT does not allow for sessions
+        return RequestFactory().get(address)
+    
+#    def test_00010_userActionsViewExists(self):
+#        client = Client()
+#        response = client.get('/user/')
+#        self.assertEqual(response.status_code, 200)
+        
+    def test_00020_userActionsIsCorrectPage(self):
+        client = Client()
+        user = User.objects.create(username='alan')
+        user.set_password('password')
+        user.save()
+        client.login(username='alan', password='password')
+        response = client.get('/user/')
+        self.assertEqual(response.content, 'User Actions')
+        
+    def test_00021_applicantCannotLoginToUserArea(self):
+        client = Client()
+        applicant = Applicant.objects.create(username='app')
+        applicant.set_password('pass')
+        applicant.save()
+        client.login(username='app', password='pass')
+        response = client.get('/user/')
+        self.assertEqual(response.status_code, 302)
+        
+#    def test_00030_djangoResponseFactoryTest(self):
+#        response = userActions(self.getRequest('/user/'))
+#        self.assertEqual(response.status_code, 200)
+        
+    def test_00040_unauthenticatedUserGetsRedirected(self):
+        client = Client()
+        response = client.get('/user/')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_00050_userLoginPresentsForm(self):
+        client = Client()
