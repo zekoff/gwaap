@@ -264,3 +264,105 @@ class ViewTests(TestCase):
         client = Client()
         response = client.get('/user/')
         self.assertRedirects(response, '/user/login/?next=/user/')
+        
+    def test_00110_userLoginFormIsRealForm(self):
+        client = Client()
+        response = client.get('/user/login/')
+        self.assertContains(response, "<form")
+        
+    def test_00120_userLoginFormAcceptsPostDataAndFails(self):
+        client = Client()
+        data = dict(username='testuser', password='password')
+        response = client.post('/user/login/', data)
+        self.assertContains(response, "Authentication failed")
+        
+    def test_00130_userLoginAcceptsGoodLoginData(self):
+        client = Client()
+        data = dict(username='testuser', password='password')
+        user = User.objects.create(username='testuser')
+        user.set_password('password')
+        user.save()
+        response = client.post('/user/login/', data)
+        self.assertContains(response, 'Logged in')
+        
+    def test_00140_applicantFailsUserLogin(self):
+        client = Client()
+        data = dict(username='applicant', password='pass')
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('pass')
+        app.save()
+        response = client.post('/user/login/', data)
+        self.assertContains(response, 'Authentication failed')
+        
+    def test_00150_applicantHomePageExists(self):
+        client = Client()
+        response = client.get('/')
+        self.assertTrue(response.status_code in [200, 302])
+#        self.assertContains(response, 'Applicant Home')
+        
+    def test_00160_applicantHomePageRequiresLogin(self):
+        client = Client()
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('pass')
+        app.save()
+        # do NOT login user
+        response = client.get('/', follow=True)
+        self.assertContains(response, 'Applicant Login')
+        
+    def test_00170_applicantLoginPageExists(self):
+        client = Client()
+        response = client.get('/login/')
+        self.assertContains(response, 'Applicant Login')
+        
+    def test_00180_applicantHomeRequiresApplicantPermission(self):
+        client = Client()
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client.login(username='user', password='pass')
+        response = client.get('/', follow=True)
+        self.assertContains(response, 'Applicant Login')
+        
+    def test_00190_applicantsHaveApplicantPermission(self):
+        client = Client()
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('password')
+        app.save()
+        client.login(username='applicant', password='password')
+        response = client.get('/')
+        self.assertContains(response, 'Applicant Home')
+
+    def test_00200_applicantPermissionExists(self):
+        perm = Permission.objects.get(codename="is_gwaap_applicant")
+        self.assertIsInstance(perm, Permission)
+      
+    def test_00210_applicantAutomaticallyGetsApplicantPermission(self):
+        applicant = Applicant.objects.create(username="applicant")
+        self.assertTrue(applicant.has_perm('gwaap.is_gwaap_applicant'))
+        
+    def test_00220_applicantLoginHasForm(self):
+        client = Client()
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('password')
+        app.save()
+        client.login(username='applicant', password='password')
+        response = client.get('/login/')
+        self.assertContains(response, '<form')
+        
+    def test_00230_applicantLoginAcceptsPost(self):
+        client = Client()
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('password')
+        app.save()
+        data = dict(username='applicant', password='password')
+        response = client.post('/login/', data)
+        self.assertContains(response, 'Logged in')
+        
+    def test_00240_applicantLoginRejectsUsers(self):
+        client = Client()
+        user = User.objects.create(username="baduser")
+        user.set_password("pass")
+        user.save()
+        data = dict(username='baduser', password='pass')
+        response = client.post('/login/', data)
+        self.assertContains(response, 'Authentication failed')

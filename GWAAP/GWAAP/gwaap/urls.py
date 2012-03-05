@@ -9,6 +9,8 @@ urlpatterns = patterns('',
     # url(r'^GWAAP/', include('GWAAP.foo.urls')),
     
     # Full path to view b/c this is technically being called from one step up the tree
+    url(r'^$', 'gwaap.views.applicantHome'),
+    url(r'^login/$', 'gwaap.views.applicantLogin'),
     url(r'^user/$', 'gwaap.views.userActions'),
     url(r'^user/login/$', 'gwaap.views.userLogin')
 )

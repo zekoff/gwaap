@@ -14,6 +14,10 @@ class User(User):
 
 class Applicant(User):
     pass
+    class Meta:
+        permissions = (
+            ('is_gwaap_applicant', 'Is an applicant using the GWAAP system for applicant tracking.'),
+        )
     def get_application(self):
         return Application.objects.get(applicant_profile=self.get_profile())
 
@@ -31,6 +35,8 @@ def create_applicant(sender, instance, created, **kwargs):
     if created:
         applicantprofile = ApplicantProfile.objects.create(user=instance)
         Application.objects.create(applicant_profile=applicantprofile)
+        applicant_permission = Permission.objects.get(codename="is_gwaap_applicant")
+        instance.user_permissions.add(applicant_permission)
         
 @receiver(post_save, sender=User, dispatch_uid="give_users_identification")
 def create_user(sender, instance, created, **kwargs):
