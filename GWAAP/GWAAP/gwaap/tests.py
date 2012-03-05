@@ -13,6 +13,7 @@ import django.db.models
 from django.db.utils import IntegrityError
 from django.test.client import Client, RequestFactory
 from GWAAP.gwaap.views import userActions
+from django.contrib.auth.models import Permission
 
 #class SimpleTest(TestCase):
 #    def test_basic_addition(self):
@@ -204,14 +205,14 @@ class ViewTests(TestCase):
         response = client.get('/user/')
         self.assertEqual(response.content, 'User Actions')
         
-    def test_00021_applicantCannotLoginToUserArea(self):
-        client = Client()
-        applicant = Applicant.objects.create(username='app')
-        applicant.set_password('pass')
-        applicant.save()
-        client.login(username='app', password='pass')
-        response = client.get('/user/')
-        self.assertEqual(response.status_code, 302)
+#    def test_00021_applicantCannotLoginToUserArea(self):
+#        client = Client()
+#        applicant = Applicant.objects.create(username='app')
+#        applicant.set_password('pass')
+#        applicant.save()
+#        client.login(username='app', password='pass')
+#        response = client.get('/user/')
+#        self.assertEqual(response.status_code, 302)
         
 #    def test_00030_djangoResponseFactoryTest(self):
 #        response = userActions(self.getRequest('/user/'))
@@ -222,5 +223,44 @@ class ViewTests(TestCase):
         response = client.get('/user/')
         self.assertEqual(response.status_code, 302)
         
-    def test_00050_userLoginPresentsForm(self):
+#    def test_00050_userLoginPresentsForm(self):
+#        client = Client()
+
+    def test_00050_isUserPermissionExists(self):
+        permission = Permission.objects.get(codename='is_gwaap_user')
+        self.assertIsInstance(permission, Permission)
+        
+    def test_00060_usersAutomaticallyGetUserPermission(self):
+        user = User.objects.create(username="newuser")
+        user.set_password("pass")
+        user.save()
+        self.assertTrue(user.has_perm('gwaap.is_gwaap_user'))
+        
+    def test_00070_applicantsDontHaveUserPermission(self):
+        applicant = Applicant.objects.create(username="applicantman")
+        applicant.set_password("pass")
+        applicant.save()
+        self.assertFalse(applicant.has_perm('gwaap.is_gwaap_user'))
+        
+    def test_00080_usersCanViewActionsPage(self):
         client = Client()
+        user = User.objects.create(username="userman")
+        user.set_password("passs")
+        user.save()
+        client.login(username="userman", password="passs")
+        response = client.get('/user/')
+        self.assertEqual(response.content, 'User Actions')
+        
+    def test_00090_applicantsGetRedirected(self):
+        client = Client()
+        app = Applicant.objects.create(username="applicant")
+        app.set_password("pass")
+        app.save()
+        client.login(username="applicant", password="pass")
+        response = client.get('/user/')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_00100_unauthenticatedUserGoesToLogin(self):
+        client = Client()
+        response = client.get('/user/')
+        self.assertRedirects(response, '/user/login/?next=/user/')

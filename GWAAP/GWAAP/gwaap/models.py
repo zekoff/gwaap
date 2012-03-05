@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
@@ -7,6 +7,10 @@ from django.dispatch.dispatcher import receiver
 # Create your models here.
 class User(User):
     pass
+    class Meta:
+        permissions = (
+            ('is_gwaap_user', 'Is a faculty/admin user of the GWAAP system.'),
+        )
 
 class Applicant(User):
     pass
@@ -27,6 +31,12 @@ def create_applicant(sender, instance, created, **kwargs):
     if created:
         applicantprofile = ApplicantProfile.objects.create(user=instance)
         Application.objects.create(applicant_profile=applicantprofile)
+        
+@receiver(post_save, sender=User, dispatch_uid="give_users_identification")
+def create_user(sender, instance, created, **kwargs):
+    if created:
+        permission = Permission.objects.get(codename="is_gwaap_user")
+        instance.user_permissions.add(permission)
         
 #@receiver(post_save, sender=ApplicantProfile)
 #def create_application(sender, instance, created, **kwargs):
