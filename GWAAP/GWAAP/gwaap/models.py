@@ -20,10 +20,14 @@ class Applicant(User):
         )
     def get_application(self):
         return Application.objects.get(applicant_profile=self.get_profile())
-
+    
 class Application(models.Model):
     # It's in quotes b/c the ApplicantProfile class hasn't been defined yet at this point in parsing
     applicant_profile = models.ForeignKey('ApplicantProfile', unique=True)
+
+class Reference(models.Model):
+    attached_to = models.ForeignKey(Application)
+    email = models.EmailField()
 
 class ApplicantProfile(models.Model):
     user = models.ForeignKey(Applicant, unique=True)

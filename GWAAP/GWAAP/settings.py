@@ -3,6 +3,14 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+# Access sent emails as a list attached to the outbox attribute of django.core.mail
+#EMAIL_HOST = "localhost"
+#EMAIL_HOST_USER = "admin@gwaap.auburn.edu"
+#EMAIL_HOST_PASSWORD = 'rw35202'
+#EMAIL_PORT = 25
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )

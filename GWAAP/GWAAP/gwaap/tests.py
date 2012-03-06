@@ -6,7 +6,7 @@ Replace this with more appropriate tests for your application.
 
 """
 
-from GWAAP.gwaap.models import ApplicantProfile
+from GWAAP.gwaap.models import ApplicantProfile, Reference
 from django.test import TestCase
 from models import Applicant, Application, User
 import django.db.models
@@ -14,6 +14,8 @@ from django.db.utils import IntegrityError
 from django.test.client import Client, RequestFactory
 from GWAAP.gwaap.views import userActions
 from django.contrib.auth.models import Permission
+from django.core.mail import send_mail
+from django.core import mail
 
 #class SimpleTest(TestCase):
 #    def test_basic_addition(self):
@@ -366,3 +368,63 @@ class ViewTests(TestCase):
         data = dict(username='baduser', password='pass')
         response = client.post('/login/', data)
         self.assertContains(response, 'Authentication failed')
+
+    def test_00250_referenceExists(self):
+        applicant = Applicant.objects.create(username='newapplicant')
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        self.assertIsInstance(ref, Reference)
+        
+    def test_00260_addMultipleReferencesToApplication(self):
+        applicant = Applicant.objects.create(username='newapplicant')
+        Reference.objects.create(attached_to=applicant.get_application())
+        Reference.objects.create(attached_to=applicant.get_application())
+        self.assertEqual(len(Reference.objects.filter(attached_to=applicant.get_application())), 2)
+
+    def test_00270_referenceHasEmailField(self):
+        applicant = Applicant.objects.create(username='applicant')
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        ref.email = 'zekoff@gmail.com'
+        ref.save()
+        self.assertEqual(Reference.objects.get(attached_to=applicant).email, 'zekoff@gmail.com')
+        
+    def test_00280_referenceEmailRejectsNonEmail(self):
+        applicant = Applicant.objects.create(username='applicant')
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        ref.email = 'bademail'
+        ref.save()
+        self.assertRaises(NameError, ref.save())
+
+    def test_00290_sendsEmail(self):
+        send_mail("subject", "Here is the message...", 'gwaap@auburn.edu', ['zekoff@gmail.com'])
+        self.assertEqual(len(mail.outbox), 1) #@UndefinedVariable
+
+    def test_00300_sendsEmailToAddressFromReference(self):
+        applicant = Applicant.objects.create(username="applicant")
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        ref.email = 'reference@company.com'
+        ref.save()
+        send_mail('Reference request', "Message content", 'gwaap@auburn.edu', [ref.email])
+        self.assertEqual(mail.outbox[0].recipients()[0], 'reference@company.com') #@UndefinedVariable
+        
+    def test_00310_setupReferenceActionExistsForApplicants(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/')
+        self.assertContains(response, 'Add Reference')
+        
+    def test_00320_addReferenceViewExists(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/add_reference/')
+        self.assertContains(response, 'Add Reference')
+        
+    def test_00330_addingReferenceRequiresLogin(self):
+        client = Client()
+        response = client.get('/add_reference/', follow=True)
+        self.assertContains(response, 'Applicant Login')

@@ -45,7 +45,11 @@ def userLogin(request):
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def applicantHome(request):
-    return HttpResponse('Applicant Home')
+    page_content = '''
+    <h1>Applicant Home</h1>
+    <a href='/'>Add Reference</a>
+    '''
+    return HttpResponse(page_content)
 
 def applicantLogin(request):
     if request.method == "POST":
@@ -69,3 +73,9 @@ def applicantLogin(request):
     '''
     return HttpResponse(page_content)
 
+@permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
+def applicantAddReference(request):
+    page_content = '''
+    <h1>Add Reference</h1>
+    '''
+    return HttpResponse(page_content)
