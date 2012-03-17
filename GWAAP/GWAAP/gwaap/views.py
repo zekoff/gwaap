@@ -1,11 +1,8 @@
 # Create your views here.
-from django.shortcuts import render_to_response
-from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.models import User
+from django.http import HttpResponse
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import authenticate, login
-from GWAAP.gwaap.models import Reference, Applicant, Application
+from GWAAP.gwaap.models import Reference, Application
 
 @permission_required('gwaap.is_gwaap_user', login_url="/user/login/")
 def userActions(request):
@@ -38,7 +35,7 @@ def userLogin(request):
 def applicantHome(request):
     page_content = '''
     <h1>Applicant Home</h1>
-    <a href='/'>Add Reference</a>
+    <a href='/add_reference/'>Add Reference</a>
     '''
     return HttpResponse(page_content)
 

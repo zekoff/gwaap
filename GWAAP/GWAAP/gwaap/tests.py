@@ -4,7 +4,7 @@ from models import Applicant, Application, User
 import django.db.models
 from django.db.utils import IntegrityError
 from django.test.client import Client, RequestFactory
-from GWAAP.gwaap.views import userActions
+#from GWAAP.gwaap.views import userActions
 from django.contrib.auth.models import Permission
 from django.core.mail import send_mail
 from django.core import mail

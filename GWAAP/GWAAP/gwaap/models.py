@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Permission, UserManager
+from django.contrib.auth.models import Permission
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
@@ -12,6 +12,8 @@ class User(DjangoUser):
         permissions = (
             ('is_gwaap_user', 'Is a faculty/admin user of the GWAAP system.'),
         )
+    def __unicode__(self):
+        return self.username
 
 class Applicant(DjangoUser):
     class Meta:
@@ -20,17 +22,25 @@ class Applicant(DjangoUser):
         )
     def get_application(self):
         return Application.objects.get(applicant_profile=self.get_profile())
+    def __unicode__(self):
+        return self.username
     
 class Application(models.Model):
     applicant_profile = models.ForeignKey('ApplicantProfile', unique=True)
+    def __unicode__(self):
+        return 'Application for ' + str(self.applicant_profile.user.username)
 
 class Reference(models.Model):
     attached_to = models.ForeignKey(Application)
     email = models.EmailField()
     unique_id = models.CharField(max_length=12, unique=True)
+    def __unicode__(self):
+        return 'Reference on behalf of ' + str(self.attached_to.applicant_profile.user.username)
 
 class ApplicantProfile(models.Model):
     user = models.ForeignKey(DjangoUser, unique=True)
+    def __unicode__(self):
+        return "Django profile info for " + str(self.user.username)
     
 @receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_bugfix")
 def create_applicant(sender, instance, created, **kwargs):
@@ -59,4 +69,4 @@ def create_reference(sender, instance, created, **kwargs):
 
 # Random string generator, based on http://stackoverflow.com/questions/2257441/python-random-string-generation-with-upper-case-letters-and-digits
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits + string.lowercase):
-    return ''.join(random.choice(chars) for x in range(size))
+    return ''.join(random.choice(chars) for x in range(size)) #@UnusedVariable
