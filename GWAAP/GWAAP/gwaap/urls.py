@@ -4,16 +4,14 @@ from django.conf.urls.defaults import patterns, include, url
 # from django.contrib import admin
 # admin.autodiscover()
 
-urlpatterns = patterns('',
-    # url(r'^$', 'GWAAP.views.home', name='home'),
-    # url(r'^GWAAP/', include('GWAAP.foo.urls')),
-    
+urlpatterns = patterns('gwaap.views',
     # Full path to view b/c this is technically being called from one step up the tree
     # Applicant URLs
-    url(r'^$', 'gwaap.views.applicantHome'),
-    url(r'^login/$', 'gwaap.views.applicantLogin'),
-    url(r'^add_reference/$', 'gwaap.views.applicantAddReference'),
+    url(r'^$', 'applicantHome'),
+    url(r'^login/$', 'applicantLogin'),
+    url(r'^add_reference/$', 'applicantAddReference'),
+    url(r'^reference/(?P<unique_id>.*)/$', 'completeReference'),
     # User URLs
-    url(r'^user/$', 'gwaap.views.userActions'),
-    url(r'^user/login/$', 'gwaap.views.userLogin')
+    url(r'^user/$', 'userActions'),
+    url(r'^user/login/$', 'userLogin')
 )

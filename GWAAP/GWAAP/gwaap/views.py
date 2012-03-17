@@ -5,16 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth import authenticate, login
-
-#def pagetest(request):
-#    return HttpResponse(content="Pagetest")
-#
-#def logintest(request):
-#    form = AuthenticationForm()
-#    return HttpResponse(form.__unicode__())
-#
-#def sandboxbranchview(request):
-#    return HttpResponse(content="This is the sandbox")
+from GWAAP.gwaap.models import Reference, Applicant, Application
 
 @permission_required('gwaap.is_gwaap_user', login_url="/user/login/")
 def userActions(request):
@@ -75,7 +66,43 @@ def applicantLogin(request):
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def applicantAddReference(request):
+    if request.method == 'POST':
+        application = Application.objects.get(applicant_profile=request.user.get_profile())
+        ref = Reference.objects.create(attached_to=application)
+        ref.email = request.POST['email']
+        ref.save()
+        page_content = '''
+        <h1>Add Reference</h1>
+        <p>Reference added and email sent to:</p>
+        '''
+        page_content += '<p><strong>' + str(ref.email) + '</strong></p>'
+        page_content += '<a href="/">Back to Home</a>'
+        return HttpResponse(page_content)
     page_content = '''
     <h1>Add Reference</h1>
+    <form action='/add_reference/' method='post'>
+    <p>Email address for reference:</p>
+    <input type='text' name='email' />
+    <input type='submit' />
+    </form>
     '''
     return HttpResponse(page_content)
+
+def completeReference(request, unique_id):
+    reference = Reference.objects.get(unique_id=unique_id) # this will cause an error if no one is found
+    application = reference.attached_to
+    profile = application.applicant_profile
+    applicant = profile.user
+    if request.method == "POST":
+        page_content = '<h1>Complete Reference for ' + str(applicant.get_full_name()) + '</h1><!-- POST accepted -->'
+        return HttpResponse(page_content)
+    page_content = "<h1>Complete Reference for " + str(applicant.get_full_name()) + "</h1><form action='"
+    page_content += str(request.path)
+    page_content += '''' method='post'>
+    <p>Verification code:</p>
+    <input type='text' name='verification_code' />
+    <input type='submit' />
+    </form>
+    '''
+    return HttpResponse(page_content)
+

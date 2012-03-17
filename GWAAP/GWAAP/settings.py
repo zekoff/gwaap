@@ -1,15 +1,22 @@
 # Django settings for GWAAP project.
 
+###########################################
+# ******* NOTE / ATTN / HEADS UP ******** #
+###########################################
+# The CSRF middleware has been deactivated to facilitate testing.
+# For a secure system, it must be reactivated before deployment
+# or the system could be vulnerable to CSRF.
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 # Access sent emails as a list attached to the outbox attribute of django.core.mail
-#EMAIL_HOST = "localhost"
-#EMAIL_HOST_USER = "admin@gwaap.auburn.edu"
-#EMAIL_HOST_PASSWORD = 'rw35202'
-#EMAIL_PORT = 25
+#EMAIL_HOST = "smtp.gmail.com"
+#EMAIL_HOST_USER = "account@gmail.com"
+#EMAIL_HOST_PASSWORD = 'password'
+#EMAIL_PORT = 587
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -21,7 +28,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
 #        'NAME': 'C:\\Users\\Zekoff\\Desktop\\Masters Project\\GWAAP\\sqlite.db',                      # Or path to database file if using sqlite3.
-        'NAME': 'C:\\Users\\Zekoff\\git\\gwaap\\GWAAP\\sqlite.db', # Or path to database file if using sqlite3.
+        'NAME': 'C:\\Users\\Zekoff\\git\\gwaap\\GWAAP\\sqlite2.db', # Or path to database file if using sqlite3.
         'USER': '', # Not used with sqlite3.
         'PASSWORD': '', # Not used with sqlite3.
         'HOST': '', # Set to empty string for localhost. Not used with sqlite3.
@@ -104,7 +111,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+#    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )

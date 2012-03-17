@@ -1,11 +1,3 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
-Replace this with more appropriate tests for your application.
-
-"""
-
 from GWAAP.gwaap.models import ApplicantProfile, Reference
 from django.test import TestCase
 from models import Applicant, Application, User
@@ -16,13 +8,6 @@ from GWAAP.gwaap.views import userActions
 from django.contrib.auth.models import Permission
 from django.core.mail import send_mail
 from django.core import mail
-
-#class SimpleTest(TestCase):
-#    def test_basic_addition(self):
-#        """
-#        Tests that 1 + 1 always equals 2.
-#        """
-#        self.assertEqual(1 + 1, 2)
 
 class ModelTests(TestCase):
     
@@ -185,6 +170,12 @@ class ModelTests(TestCase):
         applicant = Applicant(username="user")
         applicant.save()
         self.assertIsInstance(applicant.get_application(), Application)
+        
+    def test_00210_referenceHasUniqueURL(self):
+        applicant = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        correct_id = ref.unique_id
+        self.assertEqual(ref, Reference.objects.get(unique_id=correct_id))
 
 class ViewTests(TestCase):
     
@@ -428,3 +419,69 @@ class ViewTests(TestCase):
         client = Client()
         response = client.get('/add_reference/', follow=True)
         self.assertContains(response, 'Applicant Login')
+
+    def test_00340_completeReferenceViewExists(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.unique_id = '1'
+        ref.save()
+        response = Client().get('/reference/1/')
+        self.assertTrue(response.status_code in [200, 302])
+        
+    def test_00350_completeReferenceViewRequestsVerification(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.unique_id = '1'
+        ref.save()
+        response = Client().get('/reference/1/')
+        self.assertContains(response, 'Verification code')
+        
+    def test_00360_completeReferenceAcceptsPost(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.unique_id = '1'
+        ref.save()
+        data = dict(verification_code='bbb')
+        response = Client().post('/reference/1/', data)
+        self.assertContains(response, 'POST accepted')
+        
+    def test_00370_completeReferenceGETUsesUniqueID(self):
+        applicant = Applicant.objects.create(username='app')
+        applicant.first_name = "Test"
+        applicant.last_name = "Applicant"
+        applicant.save()
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        ref.email = 'test@email.com'
+        ref.save()
+        response = Client().get('/reference/' + str(ref.unique_id) + '/')
+        self.assertContains(response, 'Test Applicant')
+        
+    def test_00380_completeReferenceGETUsesUniqueID2(self):
+        applicant = Applicant.objects.create(username='app')
+        applicant.first_name = "Michael"
+        applicant.last_name = "Zekoff"
+        applicant.save()
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        ref.email = 'test@email.com'
+        ref.save()
+        response = Client().get('/reference/' + str(ref.unique_id) + '/')
+        self.assertContains(response, 'Michael Zekoff')
+        
+    def test_00390_addReferenceHasForm(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/add_reference/')
+        self.assertContains(response, '<form')
+        
+    def test_00400_addReferencePostGeneratesReference(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        data = dict(email='reference@school.edu')
+        client.post('/add_reference/', data)
+        self.assertEqual('reference@school.edu', Reference.objects.get(attached_to=applicant.get_application()).email)
