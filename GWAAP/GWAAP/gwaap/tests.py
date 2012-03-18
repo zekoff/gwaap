@@ -1,4 +1,4 @@
-from GWAAP.gwaap.models import ApplicantProfile, Reference
+from GWAAP.gwaap.models import ApplicantProfile, Reference, Comment, Vote
 from django.test import TestCase
 from models import Applicant, Application, User
 import django.db.models
@@ -176,6 +176,77 @@ class ModelTests(TestCase):
         ref = Reference.objects.create(attached_to=applicant.get_application())
         correct_id = ref.unique_id
         self.assertEqual(ref, Reference.objects.get(unique_id=correct_id))
+        
+    def test_00220_commentModelExists(self):
+        comment = Comment.objects.create(attached_to=Applicant.objects.create(username='test').get_application())
+        self.assertIsInstance(comment, Comment)
+        
+    def test_00230_commentForeignKeyIsApplication(self):
+        app = Applicant.objects.create(username='applicant')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        self.assertIsInstance(comment.attached_to, Application)
+        
+    def test_00240_commentMadeByUser(self):
+        app = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        comment.made_by = user
+        comment.save()
+        comment = Comment.objects.get(attached_to=app.get_application())
+        self.assertEqual(comment.made_by, user)
+        
+    def test_00250_commentContainsContent(self):
+        app = Applicant.objects.create(username='applicant')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        comment.content = "This is a good applicant"
+        comment.save()
+        comment = Comment.objects.get(attached_to=app.get_application())
+        self.assertEqual(comment.content, "This is a good applicant")
+        
+    def test_00260_voteModelExists(self):
+        vote = Vote.objects.create(attached_to=Applicant.objects.create(username='app').get_application())
+        self.assertIsInstance(vote, Vote)
+        
+    def test_00270_voteMadeByUser(self):
+        app = Applicant.objects.create(username='app')
+        user = User.objects.create(username='user')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.made_by = user
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertIsInstance(vote.made_by, User)
+        
+    def test_00280_voteModelContainsVote(self):
+        app = Applicant.objects.create(username='app')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.content = 1
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertEqual(vote.content, 1)
+        
+    def test_00280_voteModelUnicodeGivesCorrectString(self):
+        app = Applicant.objects.create(username='app')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.content = 2
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertEqual(vote.__unicode__(), Vote.VOTE_CHOICES[1][1])
+        
+    def test_00290_commentPermissionExists(self):
+        perm = Permission.objects.get(codename='can_comment')
+        self.assertIsInstance(perm, Permission)
+        
+    def test_00300_votePermissionExists(self):
+        perm = Permission.objects.get(codename='can_vote')
+        self.assertIsInstance(perm, Permission)
+        
+    def test_00310_referenceCanMakeFreeformComments(self):
+        applicant = Applicant.objects.create(username='applicant')
+        reference = Reference.objects.create(attached_to=applicant.get_application())
+        reference.comments = "good applicant"
+        reference.save()
+        refer = Reference.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(refer.comments, "good applicant")
 
 class ViewTests(TestCase):
     
@@ -196,7 +267,7 @@ class ViewTests(TestCase):
         user.save()
         client.login(username='alan', password='password')
         response = client.get('/user/')
-        self.assertEqual(response.content, 'User Actions')
+        self.assertContains(response, 'User Actions')
         
 #    def test_00021_applicantCannotLoginToUserArea(self):
 #        client = Client()
@@ -242,7 +313,7 @@ class ViewTests(TestCase):
         user.save()
         client.login(username="userman", password="passs")
         response = client.get('/user/')
-        self.assertEqual(response.content, 'User Actions')
+        self.assertContains(response, 'User Actions')
         
     def test_00090_applicantsGetRedirected(self):
         client = Client()
@@ -427,14 +498,15 @@ class ViewTests(TestCase):
         ref.save()
         response = Client().get('/reference/1/')
         self.assertTrue(response.status_code in [200, 302])
-        
-    def test_00350_completeReferenceViewRequestsVerification(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.unique_id = '1'
-        ref.save()
-        response = Client().get('/reference/1/')
-        self.assertContains(response, 'Verification code')
+
+# No longer using this method of authentication        
+#    def test_00350_completeReferenceViewRequestsVerification(self):
+#        app = Applicant.objects.create(username='app')
+#        ref = Reference.objects.create(attached_to=app.get_application())
+#        ref.unique_id = '1'
+#        ref.save()
+#        response = Client().get('/reference/1/')
+#        self.assertContains(response, 'Verification code')
         
     def test_00360_completeReferenceAcceptsPost(self):
         app = Applicant.objects.create(username='app')
@@ -485,3 +557,224 @@ class ViewTests(TestCase):
         data = dict(email='reference@school.edu')
         client.post('/add_reference/', data)
         self.assertEqual('reference@school.edu', Reference.objects.get(attached_to=applicant.get_application()).email)
+        
+    def test_00410_displayApplicantsViewExists(self):
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/display_applicants/')
+        self.assertContains(response, 'Display Applicants')
+        
+    def test_00420_applicantCannotViewApplicants(self):
+        app = Applicant.objects.create(username='applicant')
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/user/display_applicants/', follow=True)
+        self.assertContains(response, 'User Login')
+
+    def test_00430_mustBeLoggedInToViewApplicants(self):
+        client = Client()
+        response = client.get('/user/display_applicants/', follow=True)
+        self.assertContains(response, 'User Login')
+        
+    def test_00440_displayApplicantsShowsAllApplicants(self):
+        for x in range(5):
+            applicantName = 'applicant' + str(x)
+            Applicant.objects.create(username=applicantName)
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/display_applicants/')
+        self.assertContains(response, '<a', 5)
+        
+    def test_00450_userCanViewSingleApplicantInfo(self):
+        for x in range(5):
+            applicantName = 'applicant' + str(x + 1)
+            Applicant.objects.create(username=applicantName)
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/view_applicant/1/')
+        self.assertContains(response, 'applicant1')
+        
+    def test_00460_applicantCannotViewApplicantInfo(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/user/view_applicant/1/', follow=True)
+        self.assertContains(response, 'User Login')
+        
+    def test_00470_displayApplicantsLinksToApplicantViews(self):
+        for x in range(5):
+            applicantName = 'applicant' + str(x + 1)
+            Applicant.objects.create(username=applicantName)
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/display_applicants/')
+        self.assertContains(response, '/user/view_applicant/1/')
+        
+    def test_00480_applicantViewPageGivesCommentOption(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/view_applicant/1/', follow=True)
+        self.assertContains(response, 'Comment')
+        
+    def test_00490_applicantViewPageGivesVoteOption(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/view_applicant/1/', follow=True)
+        self.assertContains(response, 'Vote')
+        
+    def test_00500_makeCommentViewExists(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_comment")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/make_comment/1/')
+        self.assertContains(response, 'Make Comment')
+        
+    def test_00510_makeCommentViewRequiresUserLogin(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="is_gwaap_user")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/user/make_comment/1/', follow=True)
+        self.assertContains(response, 'User Login')
+
+    def test_00520_makeCommentPostSavesComment(self):
+        applicant = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_comment")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        data = dict(comment='Good applicant')
+        client.post('/user/make_comment/1/', data)
+        comment = Comment.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(comment.content, "Good applicant")
+
+    def test_00530_makeCommentGetIncludesForm(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_comment")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/make_comment/1/')
+        self.assertContains(response, '<form')
+        
+    def test_00540_postCommentSavesUser(self):
+        applicant = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_comment")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        data = dict(comment='Good applicant')
+        client.post('/user/make_comment/1/', data)
+        comment = Comment.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(comment.made_by, user)
+        
+    def test_00550_castVoteViewExists(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_vote")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/cast_vote/1/')
+        self.assertContains(response, 'Cast Vote')
+
+    def test_00560_castVoteViewRequiresPermission(self):
+        applicant = Applicant.objects.create(username='applicant')
+        applicant.set_password('pass')
+        applicant.save()
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_vote")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/user/cast_vote/1/', follow=True)
+        self.assertContains(response, 'User Login')
+        
+    def test_00570_castVotePostSavesVote(self):
+        applicant = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_vote")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        data = dict(vote=1)
+        client.post('/user/cast_vote/1/', data)
+        vote = Vote.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(str(vote), 'Strong Reject')
+        
+    def test_00580_castVoteGetIncludesForm(self):
+        Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_vote")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/user/cast_vote/1/')
+        self.assertContains(response, '<form')
+        
+    def test_00590_castVoteSavesUser(self):
+        applicant = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        permission = Permission.objects.get(codename="can_vote")
+        user.user_permissions.add(permission)
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        data = dict(vote=1)
+        client.post('/user/cast_vote/1/', data)
+        vote = Vote.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(vote.made_by, user)
+
