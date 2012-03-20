@@ -22,8 +22,6 @@ class Applicant(DjangoUser):
         )
     def get_application(self):
         return Application.objects.get(applicant_profile=self.get_profile())
-    def get_full_name(self):
-        return self.first_name + self.last_name
     def __unicode__(self):
         return self.username
     
@@ -51,7 +49,7 @@ class Comment(models.Model):
             ('can_comment', 'Can make comments on applications.'),
         )
     attached_to = models.ForeignKey(Application)
-    made_by = models.OneToOneField(User, blank=True, null=True)
+    made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.TextField()
     
 class Vote(models.Model):
@@ -66,7 +64,7 @@ class Vote(models.Model):
                     (4, 'Strong Accept')
                 )
     attached_to = models.ForeignKey(Application)
-    made_by = models.OneToOneField(User, blank=True, null=True)
+    made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.PositiveSmallIntegerField(null=True, choices=VOTE_CHOICES)
     def __unicode__(self):
         return Vote.VOTE_CHOICES[self.content - 1][1]

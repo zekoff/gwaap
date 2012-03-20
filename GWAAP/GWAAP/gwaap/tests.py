@@ -247,6 +247,42 @@ class ModelTests(TestCase):
         reference.save()
         refer = Reference.objects.get(attached_to=applicant.get_application())
         self.assertEqual(refer.comments, "good applicant")
+        
+    def test_00320_manyToManyUserAndCommentRelationships(self):
+        user1 = User.objects.create(username='user1')
+        user2 = User.objects.create(username="user2")
+        applicant1 = Applicant.objects.create(username='applicant1')
+        applicant2 = Applicant.objects.create(username='applicant2')
+        comment11 = Comment.objects.create(attached_to=applicant1.get_application())
+        comment11.made_by = user1
+        comment11.save()
+        comment12 = Comment.objects.create(attached_to=applicant2.get_application())
+        comment12.made_by = user1
+        comment12.save()
+        comment21 = Comment.objects.create(attached_to=applicant1.get_application())
+        comment21.made_by = user2
+        comment21.save()
+        comment22 = Comment.objects.create(attached_to=applicant2.get_application())
+        comment22.made_by = user2
+        comment22.save()
+
+    def test_00330_manyToManyUserAndCommentRelationships(self):
+        user1 = User.objects.create(username='user1')
+        user2 = User.objects.create(username="user2")
+        applicant1 = Applicant.objects.create(username='applicant1')
+        applicant2 = Applicant.objects.create(username='applicant2')
+        comment11 = Vote.objects.create(attached_to=applicant1.get_application())
+        comment11.made_by = user1
+        comment11.save()
+        comment12 = Vote.objects.create(attached_to=applicant2.get_application())
+        comment12.made_by = user1
+        comment12.save()
+        comment21 = Vote.objects.create(attached_to=applicant1.get_application())
+        comment21.made_by = user2
+        comment21.save()
+        comment22 = Vote.objects.create(attached_to=applicant2.get_application())
+        comment22.made_by = user2
+        comment22.save()
 
 class ViewTests(TestCase):
     
@@ -337,7 +373,7 @@ class ViewTests(TestCase):
     def test_00120_userLoginFormAcceptsPostDataAndFails(self):
         client = Client()
         data = dict(username='testuser', password='password')
-        response = client.post('/user/login/', data)
+        response = client.post('/user/login/', data, follow=True)
         self.assertContains(response, "Authentication failed")
         
     def test_00130_userLoginAcceptsGoodLoginData(self):
@@ -346,8 +382,8 @@ class ViewTests(TestCase):
         user = User.objects.create(username='testuser')
         user.set_password('password')
         user.save()
-        response = client.post('/user/login/', data)
-        self.assertContains(response, 'Logged in')
+        response = client.post('/user/login/', data, follow=True)
+        self.assertContains(response, 'Login successful')
         
     def test_00140_applicantFailsUserLogin(self):
         client = Client()
@@ -355,7 +391,7 @@ class ViewTests(TestCase):
         app = Applicant.objects.create(username='applicant')
         app.set_password('pass')
         app.save()
-        response = client.post('/user/login/', data)
+        response = client.post('/user/login/', data, follow=True)
         self.assertContains(response, 'Authentication failed')
         
     def test_00150_applicantHomePageExists(self):
@@ -419,8 +455,8 @@ class ViewTests(TestCase):
         app.set_password('password')
         app.save()
         data = dict(username='applicant', password='password')
-        response = client.post('/login/', data)
-        self.assertContains(response, 'Logged in')
+        response = client.post('/login/', data, follow=True)
+        self.assertContains(response, 'Login successful')
         
     def test_00240_applicantLoginRejectsUsers(self):
         client = Client()
@@ -428,7 +464,7 @@ class ViewTests(TestCase):
         user.set_password("pass")
         user.save()
         data = dict(username='baduser', password='pass')
-        response = client.post('/login/', data)
+        response = client.post('/login/', data, follow=True)
         self.assertContains(response, 'Authentication failed')
 
     def test_00250_referenceExists(self):
@@ -513,7 +549,7 @@ class ViewTests(TestCase):
         ref = Reference.objects.create(attached_to=app.get_application())
         ref.unique_id = '1'
         ref.save()
-        data = dict(verification_code='bbb')
+        data = dict(comments='bbb')
         response = Client().post('/reference/1/', data)
         self.assertContains(response, 'POST accepted')
         
@@ -591,7 +627,7 @@ class ViewTests(TestCase):
         client = Client()
         client.login(username='user', password='pass')
         response = client.get('/user/display_applicants/')
-        self.assertContains(response, '<a', 5)
+        self.assertContains(response, '<tr>', 6)
         
     def test_00450_userCanViewSingleApplicantInfo(self):
         for x in range(5):
@@ -778,3 +814,11 @@ class ViewTests(TestCase):
         vote = Vote.objects.get(attached_to=applicant.get_application())
         self.assertEqual(vote.made_by, user)
 
+    def test_00600_logoutView(self):
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/logout/')
+        self.assertContains(response, "logged out")

@@ -6,6 +6,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('gwaap.views',
     # Full path to view b/c this is technically being called from one step up the tree
+    url(r'^logout/$', 'logoutView'),
     # Applicant URLs
     url(r'^$', 'applicantHome'),
     url(r'^login/$', 'applicantLogin'),
@@ -18,4 +19,7 @@ urlpatterns = patterns('gwaap.views',
     url(r'^user/view_applicant/(?P<applicant_pk>.*)/$', 'viewApplicant'),
     url(r'^user/make_comment/(?P<applicant_pk>.*)/$', 'makeComment'),
     url(r'^user/cast_vote/(?P<applicant_pk>.*)/$', 'castVote'),
+    
+    #TEMP
+    url(r'^test/$', 'testView'),
 )
