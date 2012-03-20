@@ -1,0 +1,17 @@
+{% extends 'user_templates/user_section_template.html' %}
+{% block title %}Cast Vote{% endblock %}
+
+{% block content %}
+<h1>Cast Vote</h1>
+<h2>On the application belonging to {{ applicant.get_full_name|default:applicant.username }}</h2>
+<form action="#" method="POST">
+	{% csrf_token %}
+	<input type="text" name="vote" /><br />
+	<button type="submit" class="btn btn-primary">Cast Vote</button>
+</form>
+{% endblock %}
+
+{% block comments %}
+Cast Vote
+{{ applicant.username }}
+{% endblock %}

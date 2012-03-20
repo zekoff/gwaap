@@ -1,0 +1,26 @@
+{% extends 'user_templates/user_section_template.html' %}
+{% block title %}View Applicant{% endblock %}
+{% block content %}
+<h1>Applicant Details</h1>
+<div class="row well span8 offset2">
+	<table>
+		<tr>
+			<td><p><strong>Last name:</strong></p></td>
+			<td><p>{{ applicant.last_name }}</p></td>
+		</tr>
+		<tr>
+			<td><p><strong>First name:</strong></p></td>
+			<td><p>{{ applicant.first_name }}</p></td>
+		</tr>
+		<tr>
+			<td><p><strong>Username:</strong></p></td>
+			<td><p>{{ applicant.username }}</p></td>
+		</tr>
+	</table>
+</div>
+{% endblock %}
+{% block comments %}
+Vote
+Comment
+{{ applicant.username }}
+{% endblock %}

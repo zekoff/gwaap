@@ -1,0 +1,17 @@
+{% extends 'base_template.html' %}
+{% block title %}Reference Complete{% endblock %}
+
+{% block content %}
+<style type="text/css">
+.navbar {
+	display: none;
+}
+</style>
+<h1>Thank You!</h1>
+{% endblock %}
+
+{% block comments %}
+{{ applicant.get_full_name }}
+Reference Complete
+POST accepted
+{% endblock %}

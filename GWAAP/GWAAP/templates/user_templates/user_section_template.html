@@ -1,0 +1,18 @@
+{% extends "base_template.html" %}
+{# User Section Template #}
+
+{% block title %}GWAAP Faculty{% endblock %}
+{% block home_link %}/user/{% endblock %}
+
+{% block navbar %}
+<li class="divider-vertical"></li>
+<li><a href='/user/'>Home</a></li>
+<li class="divider-vertical"></li>
+{% endblock %}
+
+{% block navbar_extra %}
+<form class="navbar-search pull-left" action="" method="POST">
+	{% csrf_token %}
+	<input type="text" class="search-query span3" placeholder="Search Applicants">
+</form>
+{% endblock %}

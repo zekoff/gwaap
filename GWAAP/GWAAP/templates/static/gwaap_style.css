@@ -1,0 +1,10 @@
+.gwaap_message_div {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.gwaap_outer_messages {
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+}

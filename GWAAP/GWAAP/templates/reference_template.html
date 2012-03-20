@@ -1,0 +1,23 @@
+{% extends 'base_template.html' %}
+{% block title %}Complete Reference{% endblock %}
+
+{% block content %}
+<style type="text/css">
+.navbar {
+	display: none;
+}
+</style>
+<h1>Auburn University CSSE Reference Form</h1>
+<h2>On behalf of {{ applicant.get_full_name|default:applicant.username }}</h2>
+<p>Please describe your experience with {{ applicant.get_full_name|default:applicant.username }}. Your comments will be used to help evaluate this candidate's fitness for acceptance into graduate school at Auburn University. All data will be kept confidential, and no part of this reference form will be made available to {{ applicant.get_full_name|default:"the student" }} at any time.</p>
+<form action="#" method="POST">
+	{% csrf_token %}
+	<textarea class="input-xlarge" rows="4" name="comments" placeholder="Enter comments here..." ></textarea><br />
+	<button type="submit" class="btn btn-primary">Submit Comments</button>
+</form>
+{% endblock %}
+
+{% block comments %}
+{{ applicant.get_full_name }}
+Complete Reference
+{% endblock %}

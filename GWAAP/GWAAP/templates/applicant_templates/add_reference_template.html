@@ -1,0 +1,15 @@
+{% extends 'applicant_templates/applicant_section_template.html' %}
+{% block title %}Add Reference{% endblock %}
+
+{% block content %}
+<h1>Add Reference</h1>
+<form action="#" method="POST">
+	{% csrf_token %}
+	<input type="text" name="email" placeholder="Email address" /><br />
+	<button type="submit" class="btn btn-primary">Request Reference</button>
+</form>
+{% endblock %}
+
+{% block comments %}
+Add Reference
+{% endblock %}

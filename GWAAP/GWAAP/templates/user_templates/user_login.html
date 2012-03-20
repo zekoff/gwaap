@@ -1,0 +1,20 @@
+{% extends 'user_templates/user_section_template.html' %}
+{# User Login Template #}
+
+{% block title %}Faculty Login{% endblock %}
+
+{% block content %}
+<div class="span6 offset3">
+<h1>Faculty Login</h1>
+<form class="well" action="#" method="POST">
+	{% csrf_token %}
+	<input type="text" name="username" class="span3" placeholder="Username" /><br />
+	<input type="password" name="password" class="span3" placeholder="Password" /><br />
+	<button type="submit" class="btn btn-primary">Login</button>
+</form>
+</div>
+{% endblock %}
+
+{% block comments %}
+User Login
+{% endblock %}

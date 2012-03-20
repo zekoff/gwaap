@@ -1,0 +1,17 @@
+{% extends 'user_templates/user_section_template.html' %}
+{% block title %}Make Comment{% endblock %}
+
+{% block content %}
+<h1>Make Comment</h1>
+<h2>On the application belonging to {{ applicant.get_full_name|default:applicant.username }}</h2>
+<form action="#" method="POST">
+	{% csrf_token %}
+	<textarea class="input-xlarge" rows="4" name="comment" placeholder="Write comments here..."></textarea><br />
+	<button type="submit" class="btn btn-primary">Record Comment</button>
+</form>
+{% endblock %}
+
+{% block comments %}
+Make Comment
+{{ applicant.username }}
+{% endblock %}
