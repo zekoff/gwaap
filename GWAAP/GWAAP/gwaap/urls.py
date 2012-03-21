@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls.defaults import patterns, url
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -12,6 +12,8 @@ urlpatterns = patterns('gwaap.views',
     url(r'^login/$', 'applicantLogin'),
     url(r'^add_reference/$', 'applicantAddReference'),
     url(r'^reference/(?P<unique_id>.*)/$', 'completeReference'),
+    url(r'^view_application/$', 'viewApplication'),
+    url(r'^view_profile/$', 'viewProfile'),
     # User URLs
     url(r'^user/$', 'userActions'),
     url(r'^user/login/$', 'userLogin'),
@@ -19,6 +21,7 @@ urlpatterns = patterns('gwaap.views',
     url(r'^user/view_applicant/(?P<applicant_pk>.*)/$', 'viewApplicant'),
     url(r'^user/make_comment/(?P<applicant_pk>.*)/$', 'makeComment'),
     url(r'^user/cast_vote/(?P<applicant_pk>.*)/$', 'castVote'),
+    url(r'^user/search_applicants/', 'searchApplicants'),
     
     #TEMP
     url(r'^test/$', 'testView'),

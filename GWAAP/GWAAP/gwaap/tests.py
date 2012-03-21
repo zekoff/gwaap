@@ -822,3 +822,152 @@ class ViewTests(TestCase):
         client.login(username='user', password='pass')
         response = client.get('/logout/')
         self.assertContains(response, "logged out")
+        
+    def test_00610_searchApplicantsViewExists(self):
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        response = client.post('/user/search_applicants/', {}, follow=True)
+        self.assertContains(response, "Search Applicants")
+        
+    def test_00620_searchApplicantsRequiresUserLogin(self):
+        client = Client()
+        response = client.post('/user/search_applicants/', {}, follow=True)
+        self.assertContains(response, "User Login")
+        
+    def test_00630_searchApplicantsAcceptsPostData(self):
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = dict()
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'POST accepted')
+        
+    def test_00640_searchPageGetsSearchString(self):
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = dict(search_string="testing")
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'Search String: testing')
+        
+    def test_00650_resultsIncludeSearchByUsername(self):
+        for x in range(5):
+            username = "app" + str(x)
+            first = "Test" + str(x)
+            last = "Applicant" + str(x)
+            applicant = Applicant.objects.create(username=username)
+            applicant.first_name = first
+            applicant.last_name = last
+            applicant.save()
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = {'search_string':'app'}
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'app1')
+
+    def test_00660_resultsIncludeSearchByFirstName(self):
+        for x in range(5):
+            username = "app" + str(x)
+            first = "Test" + str(x)
+            last = "Applicant" + str(x)
+            applicant = Applicant.objects.create(username=username)
+            applicant.first_name = first
+            applicant.last_name = last
+            applicant.save()
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = {'search_string':'Test1'}
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'app1')
+
+    def test_00670_resultsIncludeSearchByLastName(self):
+        for x in range(5):
+            username = "app" + str(x)
+            first = "Test" + str(x)
+            last = "Applicant" + str(x)
+            applicant = Applicant.objects.create(username=username)
+            applicant.first_name = first
+            applicant.last_name = last
+            applicant.save()
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = {'search_string':'Applicant3'}
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'app3')
+        
+    def test_00680_resultsDontIncludeExtras(self):
+        for x in range(5):
+            username = "app" + str(x)
+            first = "Test" + str(x)
+            last = "Applicant" + str(x)
+            applicant = Applicant.objects.create(username=username)
+            applicant.first_name = first
+            applicant.last_name = last
+            applicant.save()
+        user = User.objects.create(username="user")
+        user.set_password("pass")
+        user.save()
+        client = Client()
+        client.login(username="user", password='pass')
+        data = {'search_string':'Applicant3'}
+        response = client.post('/user/search_applicants/', data)
+        self.assertContains(response, 'Number of results: 1')
+        
+    def test_00690_applicantViewApplication(self):
+        a = Applicant.objects.create(username='applicant')
+        a.set_password('pass')
+        a.save()
+        client = Client()
+        client.login(username='applicant', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "Application Details")
+        
+    def test_00700_viewingApplicationRequiresLogin(self):
+        a = Applicant.objects.create(username='applicant')
+        a.set_password('pass')
+        a.save()
+        client = Client()
+        response = client.get('/view_application/', follow=True)
+        self.assertContains(response, "Applicant Login")
+        
+    def test_00710_userCannotLoginToApplicantApplicationView(self):
+        user = User.objects.create(username='user')
+        user.set_password('pass')
+        user.save()
+        client = Client()
+        client.login(username='user', password='pass')
+        response = client.get('/view_application/', follow=True)
+        self.assertContains(response, 'Applicant Login')
+        
+    def test_00720_applicantProfileInfoViewExists(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username="app", password='pass')
+        response = client.get('/view_profile/')
+        self.assertContains(response, "Applicant Profile")
+
+    def test_00730_applicantProfileRequiresLogin(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        response = client.get('/view_profile/', follow=True)
+        self.assertContains(response, "Applicant Login")

@@ -1,11 +1,11 @@
 # Create your views here.
-from django.http import HttpResponse, HttpResponseRedirect
-from django.contrib.auth.decorators import permission_required
-from django.contrib.auth import authenticate, login, logout
 from GWAAP.gwaap.models import Reference, Application, Applicant, Comment, User, \
     Vote
-from django.shortcuts import render_to_response
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import permission_required
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
 @permission_required('gwaap.is_gwaap_user', login_url="/user/login/")
@@ -112,7 +112,40 @@ def castVote(request, applicant_pk):
 
 def logoutView(request):
     logout(request)
-    return render_to_response('logout_template.html', {})
+    return render_to_response('logout_template.html', {}, RequestContext(request))
 
+# Can/should be removed after debugging
 def testView(request):
     return render_to_response('base_template.html', {})
+
+@permission_required('gwaap.is_gwaap_user', login_url='/user/login/')
+def searchApplicants(request):
+    data = dict(method=request.method)
+    data['search_string'] = None
+    if 'search_string' in request.POST:
+        data['search_string'] = request.POST['search_string']
+    search_terms = []
+    if data['search_string']:
+        search_terms = data['search_string'].split()
+    data['search_terms_list'] = search_terms
+    results = []
+    for applicant in Applicant.objects.all():
+        exclude = False
+        for term in search_terms:
+            term = term.lower()
+            if applicant.username.lower().find(term) == -1 and applicant.get_full_name().lower().find(term) == -1:
+                exclude = True
+        if not exclude:
+            results.append(applicant)
+    data['applicant_list'] = results
+    return render_to_response("user_templates/search_applicants.html", data, RequestContext(request))
+
+@permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
+def viewApplication(request):
+    data = dict()
+    return render_to_response('applicant_templates/view_application_template.html', data, RequestContext(request))
+
+@permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
+def viewProfile(request):
+    data = dict()
+    return render_to_response('applicant_templates/profile_info_template.html', data, RequestContext(request))

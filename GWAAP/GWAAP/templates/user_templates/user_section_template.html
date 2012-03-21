@@ -11,8 +11,8 @@
 {% endblock %}
 
 {% block navbar_extra %}
-<form class="navbar-search pull-left" action="" method="POST">
+<form class="navbar-search pull-left" action="/user/search_applicants/" method="POST">
 	{% csrf_token %}
-	<input type="text" class="search-query span3" placeholder="Search Applicants">
+	<input type="text" name="search_string" class="search-query span3" placeholder="Search Applicants">
 </form>
 {% endblock %}

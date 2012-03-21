@@ -8,3 +8,22 @@
 	bottom: 0;
 	width: 100%;
 }
+
+.gwaap_application_detail_table td, .gwaap_application_detail_table th {
+	vertical-align: middle;
+	text-align: center;
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.gwaap_application_detail_table .complete, .gwaap_application_detail_table .complete:hover {
+	background-color: green;
+}
+
+.gwaap_application_detail_table .incomplete {
+	background-color: red;
+}
+
+.gwaap_application_detail_table .pending {
+	background-color: #F89406;
+}
