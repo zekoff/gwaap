@@ -71,7 +71,7 @@ class Vote(models.Model):
     made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.PositiveSmallIntegerField(null=True, choices=VOTE_CHOICES)
     def __unicode__(self):
-        return Vote.VOTE_CHOICES[self.content - 1][1] + " for " + str(self.attached_to.applicant_profile.username)
+        return Vote.VOTE_CHOICES[self.content - 1][1] + " for " + str(self.attached_to.applicant_profile.user.username)
     
 @receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_bugfix")
 def create_applicant(sender, instance, created, **kwargs):

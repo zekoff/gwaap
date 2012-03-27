@@ -230,7 +230,7 @@ class ModelTests(TestCase):
         vote.content = 2
         vote.save()
         vote = Vote.objects.get(attached_to=app.get_application())
-        self.assertEqual(vote.__unicode__(), Vote.VOTE_CHOICES[1][1])
+        self.assertEqual(vote.__unicode__(), Vote.VOTE_CHOICES[1][1] + " for app")
         
     def test_00290_commentPermissionExists(self):
         perm = Permission.objects.get(codename='can_comment')
@@ -802,7 +802,7 @@ class ViewTests(TestCase):
         data = dict(vote=1)
         client.post('/user/cast_vote/1/', data)
         vote = Vote.objects.get(attached_to=applicant.get_application())
-        self.assertEqual(str(vote), 'Strong Reject')
+        self.assertEqual(str(vote), 'Strong Reject for applicant')
         
     def test_00580_castVoteGetIncludesForm(self):
         Applicant.objects.create(username='applicant')

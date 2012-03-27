@@ -1,0 +1,25 @@
+{% extends 'user_templates/user_section_template.html' %}
+{% block title %}Search Applicants{% endblock %}
+
+{% block content %}
+	<h1>Search Applicants</h1>
+	{% if not search_string %}
+		<p>Search string empty.</p>
+	{% else %}
+		<p>Searched using the term: <pre>{{ search_string }}</pre></p>
+	{% endif %}
+	{% if not applicant_list %}
+		<p>No applicants found.</p>
+	{% else %}
+		{# Search results here! #}
+		{% include 'applicant_display_table.html' %}
+	{% endif %}
+{% endblock %}
+
+{% block comments %}
+Search Applicants
+{{ method }} accepted
+Search String: {{ search_string }}
+Search Terms: {{ search_terms_list }}
+Number of results: {{ applicant_list|length }}
+{% endblock %}

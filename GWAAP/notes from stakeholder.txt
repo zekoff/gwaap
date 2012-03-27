@@ -1,0 +1,9 @@
+1.  Resume and letter of intent are simply files to be uploaded by the student.  Restrict uploads to files ending in PDF, DOC, DOCX, or JPG.
+
+2.  Regarding the fields completed or not completed by the student:  Online application is always complete. Transcript is yes/no, set by administrator. Possible settings are: NOT RECEIVED, INCOMPLETE, PARTIAL, COMPLETE, GRE-- picked up by GWAAP dump. TOEFL -- possibilities are NOT RECEIVED, COMPLETE, NOT APPLICABLE. Also get from GWAAP dump.
+
+3.  The milestone graphic should appear exactly as it does for the use-cases.
+
+4.  User can act directly on their GWAAP profile information to change it, but any change should trigger an email to an administrator.
+
+5.  The Reference form that references fill out should include the questions listed in the Use case, plus another column in each for "Not Observed". Auto-select "not observed" if they do not choose one.  The only one they MUST fill out is "overall recommendation" field. Comments block is also optional. No changes after submission.
