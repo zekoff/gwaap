@@ -28,15 +28,17 @@ class Applicant(DjangoUser):
 class Application(models.Model):
     applicant_profile = models.ForeignKey('ApplicantProfile', unique=True)
     def __unicode__(self):
-        return 'Application for ' + str(self.applicant_profile.user.username)
+        return 'Application belonging to ' + str(self.applicant_profile.user.username)
 
 class Reference(models.Model):
     attached_to = models.ForeignKey(Application)
     email = models.EmailField()
     unique_id = models.CharField(max_length=12, unique=True)
     comments = models.TextField()
+    name = models.CharField(max_length=60)
+    affiliation = models.CharField(max_length=60)
     def __unicode__(self):
-        return 'Reference on behalf of ' + str(self.attached_to.applicant_profile.user.username)
+        return 'Referral by ' + str(self.name) + ' on behalf of ' + str(self.attached_to.applicant_profile.user.username)
 
 class ApplicantProfile(models.Model):
     user = models.ForeignKey(DjangoUser, unique=True)
@@ -51,6 +53,8 @@ class Comment(models.Model):
     attached_to = models.ForeignKey(Application)
     made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.TextField()
+    def __unicode__(self):
+        return "Comment on the application of " + str(self.attached_to.applicant_profile.username)
     
 class Vote(models.Model):
     class Meta:
@@ -67,7 +71,7 @@ class Vote(models.Model):
     made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.PositiveSmallIntegerField(null=True, choices=VOTE_CHOICES)
     def __unicode__(self):
-        return Vote.VOTE_CHOICES[self.content - 1][1]
+        return Vote.VOTE_CHOICES[self.content - 1][1] + " for " + str(self.attached_to.applicant_profile.username)
     
 @receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_bugfix")
 def create_applicant(sender, instance, created, **kwargs):

@@ -10,7 +10,7 @@
 </head>
 
 <body>
-<div class="navbar">
+<div class="navbar navbar-fixed-top">
 	<div class="navbar-inner">
 		<div class="container">
 			<a class="brand pull-right" href="{% block home_link %}/{% endblock %}">GWAAP</a>
@@ -28,8 +28,8 @@
 		</div>
 	</div>
 </div>
-<div class="container">
-{% block content %}CONTENT{% endblock %}
+<div class="container gwaap_content_shadow">
+	{% block content %}CONTENT{% endblock %}
 </div>
 
 {% if messages %}

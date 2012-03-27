@@ -1,3 +1,24 @@
+body {
+	cursor: default;
+	background: url('gwaap_background.jpg');
+	overflow: scroll;
+}
+
+h1 {
+	margin-bottom: .5em;
+}
+
+.gwaap_content_shadow {
+	-moz-box-shadow: 0 0 5px 5px #888;
+	-webkit-box-shadow: 0 0 5px 5px#888;
+	box-shadow: 0 0 5px 5px #888;
+	width: 980px;
+	background: white;
+	padding: 1em;
+	padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+	padding-bottom: 30px; /* A little room at the bottom */
+}
+
 .gwaap_message_div {
 	margin-left: auto;
 	margin-right: auto;

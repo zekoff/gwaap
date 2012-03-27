@@ -283,6 +283,22 @@ class ModelTests(TestCase):
         comment22 = Vote.objects.create(attached_to=applicant2.get_application())
         comment22.made_by = user2
         comment22.save()
+        
+    def test_00340_referenceModelContainsName(self):
+        app = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.name = 'Mr. Reference'
+        ref.save()
+        ref = Reference.objects.get(attached_to=app.get_application())
+        self.assertEqual("Mr. Reference", ref.name)
+
+    def test_00350_referenceModelContainsAffiliation(self):
+        app = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.affiliation = 'Big Company'
+        ref.save()
+        ref = Reference.objects.get(attached_to=app.get_application())
+        self.assertEqual("Big Company", ref.affiliation)
 
 class ViewTests(TestCase):
     
