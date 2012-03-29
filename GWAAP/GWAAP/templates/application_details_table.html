@@ -3,8 +3,8 @@
 <table class="table gwaap_application_detail_table">
 	<colgroup>
 		<col class="span4">
-		<col class="span2">
-		<col class="span4">
+		<col class="span1">
+		<col class="span5">
 	</colgroup>
 	<thead>
 		<tr style="background-color: silver">
@@ -15,39 +15,39 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td>Online Application</td>
-			<td style="background-color:green"><i class="icon-ok icon-white"></i></td>
-			<td><a class="btn disabled">None</a></td>
+			<td><strong>Online Application</strong></td>
+			{{ online_application_status|safe }}
+			<td>{{ online_application_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>Transcripts</td>
-			<td style="background-color:red"><i class="icon-remove icon-white"></i></td>
-			<td><a class="btn">Fill out</a></td>
+			<td><strong>Transcripts</strong></td>
+			{{ transcripts_status|safe }}
+			<td>{{ transcripts_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>GRE Scores</td>
-			<td style="background-color: #F89406"><i class="icon-time icon-white"></i></td>
-			<td><a class="btn">Action</a></td>
+			<td><strong>GRE Scores</strong></td>
+			{{ gre_scores_status|safe }}
+			<td>{{ gre_scores_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>TOEFL Scores</td>
-			<td style="background-color:green"><i class="icon-ok icon-white"></i></td>
-			<td><a class="btn">Action</a></td>
+			<td><strong>TOEFL Scores</strong></td>
+			{{ toefl_scores_status|safe }}
+			<td>{{ toefl_scores_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>Recommendations</td>
-			<td style="background-color:green"><i class="icon-ok icon-white"></i></td>
-			<td><a class="btn">Take Action</a></td>
+			<td><strong>References</strong></td>
+			{{ references_status|safe }}
+			<td>{{ references_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>Resume</td>
-			<td style="background-color:red"><i class="icon-remove icon-white"></i></td>
-			<td><a class="btn">Take Action</a></td>
+			<td><strong>Resume</strong></td>
+			{{ resume_status|safe }}
+			<td>{{ resume_actions|safe }}</td>
 		</tr>
 		<tr>
-			<td>Letter of Intent</td>
-			<td style="background-color:green"><i class="icon-ok icon-white"></i></td>
-			<td><a class="btn">Take Action</a></td>
+			<td><strong>Letter of Intent</strong></td>
+			{{ letter_status|safe }}
+			<td>{{ letter_actions|safe }}</td>
 		</tr>
 	</tbody>
 </table>

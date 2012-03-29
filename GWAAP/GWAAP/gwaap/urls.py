@@ -14,6 +14,8 @@ urlpatterns = patterns('gwaap.views',
     url(r'^reference/(?P<unique_id>.*)/$', 'completeReference'),
     url(r'^view_application/$', 'viewApplication'),
     url(r'^view_profile/$', 'viewProfile'),
+    url(r'^upload_resume/$', 'uploadResume'),
+    url(r'^upload_letter/$', 'uploadLetter'),
     # User URLs
     url(r'^user/$', 'userActions'),
     url(r'^user/login/$', 'userLogin'),

@@ -1,13 +1,18 @@
-from GWAAP.gwaap.models import ApplicantProfile, Reference, Comment, Vote
+from GWAAP.gwaap.models import ApplicantProfile, Reference, Comment, Vote, \
+    STATUS_CODE, RELATIVE_RANK, VOTE_CHOICES
+from django.contrib.auth.models import Permission
+from django.core import mail
+from django.core.mail import send_mail
+from django.db.models.fields.files import FieldFile
+from django.db.utils import IntegrityError
 from django.test import TestCase
+from django.test.client import Client, RequestFactory
 from models import Applicant, Application, User
 import django.db.models
-from django.db.utils import IntegrityError
-from django.test.client import Client, RequestFactory
+from django.core.files.base import File
+from django.core.files.uploadedfile import UploadedFile
+from django.http import HttpRequest
 #from GWAAP.gwaap.views import userActions
-from django.contrib.auth.models import Permission
-from django.core.mail import send_mail
-from django.core import mail
 
 class ModelTests(TestCase):
     
@@ -230,7 +235,7 @@ class ModelTests(TestCase):
         vote.content = 2
         vote.save()
         vote = Vote.objects.get(attached_to=app.get_application())
-        self.assertEqual(vote.__unicode__(), Vote.VOTE_CHOICES[1][1] + " for app")
+        self.assertEqual(vote.__unicode__(), VOTE_CHOICES[2][1] + " for app")
         
     def test_00290_commentPermissionExists(self):
         perm = Permission.objects.get(codename='can_comment')
@@ -299,6 +304,108 @@ class ModelTests(TestCase):
         ref.save()
         ref = Reference.objects.get(attached_to=app.get_application())
         self.assertEqual("Big Company", ref.affiliation)
+        
+    def test_00360_applicationModelHasResumeFileField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        self.assertIsInstance(application.resume, FieldFile)
+        
+    def test_00370_applicationModelHasLetterOfIntentFileField(self):
+        app = Applicant.objects.create(username="app")
+        application = app.get_application()
+        self.assertIsInstance(application.letter_of_intent, FieldFile)
+
+# Passes, but disabled to prevent writing trash files to filesystem        
+#    def test_00380_applicationSavesFile(self):
+#        app = Applicant.objects.create(username="app")
+#        application = app.get_application()
+#        resume_file = File(file("resumefile", "w"))
+#        application.resume = resume_file
+#        application.save()
+#        app.save()
+#        self.assertIsInstance(app.get_application().resume, FieldFile)
+
+    def test_00390_modelsModuleHasStatusTuple(self):
+        status = 0
+        self.assertTrue("Complete" in STATUS_CODE[status])
+        
+    def test_00400_applicationModelHasGreStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.gre_status = 0
+        application.save()
+        application = Applicant.objects.get(username='app').get_application()
+        self.assertTrue("Complete" in STATUS_CODE[application.gre_status])
+    
+    def test_00410_applicationModelHasToeflStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.toefl_status = 1
+        application.save()
+        application = Applicant.objects.get(username='app').get_application()
+        self.assertTrue("Incomplete" in STATUS_CODE[application.toefl_status])
+        
+    def test_00420_applicationModelHasTranscriptStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.transcript_status = 0
+        application.save()
+        application = Applicant.objects.get(username="app").get_application()
+        self.assertTrue("Complete" in STATUS_CODE[application.transcript_status])
+        
+    def test_00430_referenceHasIntegrityField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.integrity = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.integrity in RELATIVE_RANK[ref.integrity])
+
+    def test_00440_referenceHasDevelopmentField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.development = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.development in RELATIVE_RANK[ref.development])
+
+    def test_00450_referenceHasCommunicationField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.communication = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.communication in RELATIVE_RANK[ref.communication])
+
+    def test_00460_referenceHasMotivationField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.motivation = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.motivation in RELATIVE_RANK[ref.motivation])
+
+    def test_00470_referenceHasResearchField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.research = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.research in RELATIVE_RANK[ref.research])
+
+    def test_00480_referenceHasOverallField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.overall = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.overall in RELATIVE_RANK[ref.overall])
+        
+    def test_00490_applicationHasStatusField(self):
+        app = Applicant.objects.create(username="app")
+        app.get_application().status = 0
+        app.get_application().save()
+        self.assertEqual(app.get_application().status, 0)
 
 class ViewTests(TestCase):
     
@@ -565,9 +672,23 @@ class ViewTests(TestCase):
         ref = Reference.objects.create(attached_to=app.get_application())
         ref.unique_id = '1'
         ref.save()
-        data = dict(comments='bbb')
+        data = dict(comments='bbb', overall="0", reference_name="Jim", reference_affiliation="Bob")
+        data['integrity'] = 0
+        data['development'] = 0
+        data['communication'] = 0
+        data['motivation'] = 0
+        data['research'] = 0
         response = Client().post('/reference/1/', data)
         self.assertContains(response, 'POST accepted')
+        
+    def test_00361_completeReferenceAcceptsPost(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.unique_id = '1'
+        ref.save()
+        data = dict(comments='bbb', overall="0", reference_name="Jim", reference_affiliation="Bob")
+        response = Client().post('/reference/1/', data)
+        self.assertContains(response, 'Error')
         
     def test_00370_completeReferenceGETUsesUniqueID(self):
         applicant = Applicant.objects.create(username='app')
@@ -802,7 +923,7 @@ class ViewTests(TestCase):
         data = dict(vote=1)
         client.post('/user/cast_vote/1/', data)
         vote = Vote.objects.get(attached_to=applicant.get_application())
-        self.assertEqual(str(vote), 'Strong Reject for applicant')
+        self.assertEqual(str(vote), 'Weak Reject for applicant')
         
     def test_00580_castVoteGetIncludesForm(self):
         Applicant.objects.create(username='applicant')
@@ -987,3 +1108,205 @@ class ViewTests(TestCase):
         client = Client()
         response = client.get('/view_profile/', follow=True)
         self.assertContains(response, "Applicant Login")
+        
+    def test_00740_submitResumeViewExists(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/upload_resume/', follow=True)
+        self.assertContains(response, 'Upload Resume')
+        
+    def test_00750_submitResumeRequiresApplicantLogin(self):
+        app = User.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/upload_resume/', follow=True)
+        self.assertContains(response, 'Applicant Login')
+        
+    def test_00760_submitResumeContainsForm(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/upload_resume/', follow=True)
+        self.assertContains(response, '<form')
+
+    def test_00770_submitResumeFailsIfNoFile(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        data = dict()
+        response = client.post('/upload_resume/', data, follow=True)
+        self.assertContains(response, "Error submitting file.")
+        
+# This test case works, but is deactivated to prevent the creation of actual files on the filesystem during testng.
+#    def test_00780_submitResumeWithFile(self):
+#        app = Applicant.objects.create(username="app")
+#        app.set_password('pass')
+#        app.save()
+#        client = Client()
+#        client.login(username='app', password='pass')
+#        resume_file = open("resumefile", "w")
+#        resume_file.write("testing")
+#        resume_file.close()
+#        file_to_upload = UploadedFile(open('resumefile'))
+#        data = dict(resume=file_to_upload)
+#        response = client.post('/upload_resume/', data, follow=True)
+#        self.assertEqual(u"applicant_files/app/resumefile", app.get_application().resume.name)
+        
+# See test case 00780
+#    def test_00790_fileSubmissionVerifiesContentTypeFailure(self):
+#        app = Applicant.objects.create(username="app")
+#        app.set_password('pass')
+#        app.save()
+#        client = Client()
+#        client.login(username='app', password='pass')
+#        resume_file = open("resumefile", "w")
+#        resume_file.write("testing")
+#        resume_file.close()
+#        file_to_upload = UploadedFile(open('resumefile'))
+#        file_to_upload.content_type = "badtype"
+#        data = dict(resume=file_to_upload)
+#        response = client.post('/upload_resume/', data, follow=True)
+#        self.assertEqual("", app.get_application().resume.name)
+
+# The functionality is there, but the test case cannot be coerced like this.
+#    def test_00800_fileSubmissionVerifiesContentTypePass(self):
+#        app = Applicant.objects.create(username="app")
+#        app.set_password('pass')
+#        app.save()
+#        client = Client()
+#        client.login(username='app', password='pass')
+#        resume_file = open("resumefile", "w")
+#        resume_file.write("testing")
+#        resume_file.close()
+#        file_to_upload = UploadedFile(open('resumefile'))
+#        file_to_upload.content_type = "application/pdf"
+#        data = dict(resume=file_to_upload)
+#        response = client.post('/upload_resume/', data, follow=True)
+#        print response
+#        self.assertContains(response, "Resume uploaded.")
+
+    def test_00810_submitLetterOfIntentViewExists(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password="pass")
+        response = client.get('/upload_letter/', follow=True)
+        self.assertContains(response, "Upload Letter of Intent")
+        
+    def test_00820_submitLetterViewRequiresLogin(self):
+        app = User.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password="pass")
+        response = client.get('/upload_letter/', follow=True)
+        self.assertContains(response, "Applicant Login")
+        
+    def test_00830_submitLetterContainsForm(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password="pass")
+        response = client.get('/upload_letter/', follow=True)
+        self.assertContains(response, "<form")
+
+    def test_00840_submitLetterFailsIfNoFile(self):
+        app = Applicant.objects.create(username="app")
+        app.set_password('pass')
+        app.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        data = dict()
+        response = client.post('/upload_resume/', data, follow=True)
+        self.assertContains(response, "Error submitting file.")
+        
+    def test_00850_testReferencesPending(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        for x in range(3):
+            Reference.objects.create(attached_to=app.get_application())
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "References Pending")
+        
+    def test_00860_testReferencesIncomplete(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        for x in range(2):
+            Reference.objects.create(attached_to=app.get_application())
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "References Incomplete")
+        
+    def test_00870_testReferencesComplete(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        for x in range(3):
+            ref = Reference.objects.create(attached_to=app.get_application())
+            ref.complete = True
+            ref.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "References Complete")
+        
+    def test_00880_transcriptStatusComplete(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        application = app.get_application()
+        application.transcript_status = 0
+        application.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "Transcript Complete")
+        
+    def test_00890_greStatusComplete(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        application = app.get_application()
+        application.gre_status = 0
+        application.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "GRE Complete")
+
+    def test_00900_toeflStatusComplete(self):
+        app = Applicant.objects.create(username='app')
+        app.set_password('pass')
+        app.save()
+        application = app.get_application()
+        application.toefl_status = 0
+        application.save()
+        client = Client()
+        client.login(username='app', password='pass')
+        response = client.get('/view_application/')
+        self.assertContains(response, "TOEFL Complete")
+        
+    def test_00910_referenceViewRejectsIfReferenceAlreadyComplete(self):
+        app = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.complete = True
+        ref.save()
+        client = Client()
+        response = client.get('/reference/' + str(ref.unique_id) + "/", follow=True)
+        self.assertContains(response, "Thank you")

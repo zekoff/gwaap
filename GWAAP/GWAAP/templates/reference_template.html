@@ -9,11 +9,98 @@
 </style>
 <h1>Auburn University CSSE Reference Form</h1>
 <h2>On behalf of {{ applicant.get_full_name|default:applicant.username }}</h2>
-<p>Please describe your experience with {{ applicant.get_full_name|default:applicant.username }}. Your comments will be used to help evaluate this candidate's fitness for acceptance into graduate school at Auburn University. All data will be kept confidential, and no part of this reference form will be made available to {{ applicant.get_full_name|default:"the student" }} at any time.</p>
+<p class="well">Please describe your experience with {{ applicant.get_full_name|default:applicant.username }}. Your comments will be used to help evaluate this candidate's fitness for acceptance into graduate school at Auburn University. All data will be kept confidential, and no part of this reference form will be made available to {{ applicant.get_full_name|default:"the applicant" }} at any time.</p>
 <form action="#" method="POST">
 	{% csrf_token %}
-	<textarea class="input-xlarge" rows="4" name="comments" placeholder="Enter comments here..." ></textarea><br />
-	<button type="submit" class="btn btn-primary">Submit Comments</button>
+	<table class="table table-striped table-bordered gwaap_reference_table">
+		<colgroup>
+			<col class="span1">
+			<col class="span1">
+			<col class="span1">
+			<col class="span1">
+			<col class="span1">
+			<col class="span1">
+			<col class="span1">
+		</colgroup>
+		<thead>
+			<tr>
+				<th>Please rank relative to peers:</th>
+				<th>Upper 1%</th>
+				<th>Upper 10%</th>
+				<th>Upper 25%</th>
+				<th>Upper 50%</th>
+				<th>Lower 50%</th>
+				<th>Not observed</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Integrity</td>
+				<td><input type='radio' name='integrity' value='0' /></td>
+				<td><input type='radio' name='integrity' value='1' /></td>
+				<td><input type='radio' name='integrity' value='2' /></td>
+				<td><input type='radio' name='integrity' value='3' /></td>
+				<td><input type='radio' name='integrity' value='4' /></td>
+				<td><input type='radio' name='integrity' value='5' checked /></td>
+			</tr>
+			<tr>
+				<td>Software development ability</td>
+				<td><input type='radio' name='development' value='0' /></td>
+				<td><input type='radio' name='development' value='1' /></td>
+				<td><input type='radio' name='development' value='2' /></td>
+				<td><input type='radio' name='development' value='3' /></td>
+				<td><input type='radio' name='development' value='4' /></td>
+				<td><input type='radio' name='development' value='5' checked /></td>
+			</tr>
+			<tr>
+				<td>Ability to communicate</td>
+				<td><input type='radio' name='communication' value='0' /></td>
+				<td><input type='radio' name='communication' value='1' /></td>
+				<td><input type='radio' name='communication' value='2' /></td>
+				<td><input type='radio' name='communication' value='3' /></td>
+				<td><input type='radio' name='communication' value='4' /></td>
+				<td><input type='radio' name='communication' value='5' checked /></td>
+			</tr>
+			<tr>
+				<td>Motivation</td>
+				<td><input type='radio' name='motivation' value='0' /></td>
+				<td><input type='radio' name='motivation' value='1' /></td>
+				<td><input type='radio' name='motivation' value='2' /></td>
+				<td><input type='radio' name='motivation' value='3' /></td>
+				<td><input type='radio' name='motivation' value='4' /></td>
+				<td><input type='radio' name='motivation' value='5' checked /></td>
+			</tr>
+			<tr>
+				<td>Research potential</td>
+				<td><input type='radio' name='research' value='0' /></td>
+				<td><input type='radio' name='research' value='1' /></td>
+				<td><input type='radio' name='research' value='2' /></td>
+				<td><input type='radio' name='research' value='3' /></td>
+				<td><input type='radio' name='research' value='4' /></td>
+				<td><input type='radio' name='research' value='5' checked /></td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="row">
+		<div class="span6">
+			<h2>Overall recommendation</h2>
+			<select name="overall" id="overall">
+				<option value="">Select a value...</option>
+				<option value="">-------------------------</option>
+				<option value="3">Strongly recommend</option>
+				<option value="2">Recommend</option>
+				<option value="1">Recommend with reservations</option>
+				<option value="0">Do not recommend</option>
+			</select>
+			<h2>Comments</h2>
+			<textarea class="input-xlarge span6" rows="4" name="comments" placeholder="Enter comments here..." ></textarea><br />
+		</div>
+		<div class="well span4 offset2" style="margin-top:2em;">
+			<label>Your name:</label><input name="reference_name" />
+			<label>Your affiliation:</label><input name="reference_affiliation" />
+			<br/><button type="submit" class="btn btn-primary">Submit Comments</button>
+		</div>
+	</div>
 </form>
 {% endblock %}
 

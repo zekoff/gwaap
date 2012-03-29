@@ -1,0 +1,15 @@
+{% extends 'applicant_templates/applicant_section_template.html' %}
+{% block title %}Upload Resume{% endblock %}
+
+{% block content %}
+<h1>Upload Resume</h1>
+<form action="#" method="post" enctype="multipart/form-data">
+	{% csrf_token %}
+	<input type="file" name="resume" />
+	<input type="submit" />
+</form>
+{% endblock %}
+
+{% block comments %}
+Upload Resume
+{% endblock %}

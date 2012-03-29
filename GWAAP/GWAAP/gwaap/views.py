@@ -4,7 +4,7 @@ from GWAAP.gwaap.models import Reference, Application, Applicant, Comment, User,
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
@@ -37,7 +37,33 @@ def viewApplicant(request, applicant_pk):
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def applicantHome(request):
-    return render_to_response('applicant_templates/applicant_home_template.html', {}, RequestContext(request))
+    data = dict()
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    application = applicant.get_application()
+    data['progress_bar_width'] = str(100.0 / 6 * application.status + 100.0 / 12) + "%"
+    if application.status == 5:
+        data['progress_bar_width'] = "100%"
+    data['applicant'] = applicant
+    bold_cell = "status_" + str(application.status)
+    data[bold_cell] = "gwaap_bold_cell"
+    application_complete = True
+    if application.transcript_status != 0:
+        application_complete = False
+    if not application.letter_of_intent:
+        application_complete = False
+    if not application.resume:
+        application_complete = False
+    if application.gre_status != 0:
+        application_complete = False
+    if application.toefl_status not in [0, 5]:
+        application_complete = False
+    if len(Reference.objects.filter(attached_to=application)) < 3:
+        application_complete = False
+    if application_complete:
+        data['application_complete'] = True
+    else:
+        data['application_complete'] = False
+    return render_to_response('applicant_templates/applicant_home_template.html', data, RequestContext(request))
 
 def applicantLogin(request):
     if request.method == "POST":
@@ -54,6 +80,11 @@ def applicantLogin(request):
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def applicantAddReference(request):
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    application = applicant.get_application()
+    if len(Reference.objects.filter(attached_to=application)) >= 3:
+        messages.info(request, "All three reference requests have already been sent.")
+        return HttpResponseRedirect('/view_application/')
     if request.method == 'POST':
         application = Application.objects.get(applicant_profile=request.user.get_profile())
         ref = Reference.objects.create(attached_to=application)
@@ -61,17 +92,40 @@ def applicantAddReference(request):
         ref.save()
         messages.success(request, "Reference added.")
         messages.info(request, "Email sent to " + str(request.POST['email']))
-        return HttpResponseRedirect('/add_reference/')
+        return HttpResponseRedirect('/view_application/')
     return render_to_response('applicant_templates/add_reference_template.html', {}, RequestContext(request))
 
 def completeReference(request, unique_id):
     reference = Reference.objects.get(unique_id=unique_id) # this will cause an error if no one is found
+    if reference.complete:
+        messages.info(request, "You have already filled out a reference for this applicant. If you believe you are receiving this message in error, contact the AU CSSE department.")
+        return render_to_response('reference_complete.html', {}, RequestContext(request))
     application = reference.attached_to
     profile = application.applicant_profile
     applicant = profile.user
     data = dict(applicant=applicant)
     if request.method == "POST":
-        reference.comments = request.POST['comments']
+        # Ensure that reference has at least filled out overall recommendation
+        if not request.POST['overall']:
+            messages.error(request, "You are required to make an overall recommendation on this applicant to complete the form.")
+            return render_to_response('reference_template.html', data, RequestContext(request))
+        # Save all responses in the database
+        reference.complete = True
+        try:
+            reference.overall = int(request.POST['overall'])
+            reference.comments = request.POST['comments']
+            if request.POST['reference_name']:
+                reference.name = request.POST['reference_name']
+            if request.POST['reference_affiliation']:
+                reference.affiliation = request.POST['reference_affiliation']
+            reference.integrity = int(request.POST['integrity'])
+            reference.development = int(request.POST['development'])
+            reference.communication = int(request.POST['communication'])
+            reference.motivation = int(request.POST['motivation'])
+            reference.research = int(request.POST['research'])
+        except:
+            messages.error(request, "Error saving responses in database.")
+            return render_to_response('reference_template.html', data, RequestContext(request))
         reference.save()
         return render_to_response('reference_complete.html', data, RequestContext(request))
     return render_to_response('reference_template.html', data, RequestContext(request))
@@ -140,12 +194,161 @@ def searchApplicants(request):
     data['applicant_list'] = results
     return render_to_response("user_templates/search_applicants.html", data, RequestContext(request))
 
+# Define status cell content options
+COMPLETE_CELL = '''<td style="background-color: #468847"><i class="icon-ok icon-white"></i></td>'''
+INCOMPLETE_CELL = '''<td style="background-color: #B94A48"><i class="icon-remove icon-white"></i></td>'''
+PENDING_CELL = '''<td style="background-color: #F89406"><i class="icon-time icon-white"></i></td>'''
+NA_CELL = '''<td style="background-color: #999999">N/A</td>'''
+
+# Define button content options
+NO_ACTION = '''<a class="btn disabled">None</a>'''
+def details_button(css_id):
+    return "<button data-original-title='Details' class='btn btn-info' id='" + str(css_id) + "'><i class='icon-search icon-white'></i> Details</button>"
+def details_js(css_id, content):
+    return "$('#" + str(css_id) + "').popover({content: '" + str(content) + "', placement:'left'});"
+
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def viewApplication(request):
     data = dict()
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    application = applicant.get_application()
+    problem_with_application = False
+    data['extra_comments'] = ''
+    data['extra_onready_js'] = ''
+    # Fill context dict with status reports and relevant actions
+    data['online_application_status'] = COMPLETE_CELL
+    data['online_application_actions'] = NO_ACTION
+    # Transcripts
+    data['transcripts_status'] = INCOMPLETE_CELL
+    data['transcripts_actions'] = NO_ACTION
+    if application.transcript_status == 0:
+        data['transcripts_status'] = COMPLETE_CELL
+        data['extra_comments'] += "Transcript Complete"
+    elif application.transcript_status == 6:
+        problem_with_application = True
+    else:
+        transcripts_button = "transcripts_detail_button"
+        data['transcripts_actions'] = details_button(transcripts_button)
+        detail_content = "Transcripts not yet received by Graduate School."
+        data['extra_onready_js'] += details_js(transcripts_button, detail_content)
+    # GRE scores
+    data['gre_scores_status'] = INCOMPLETE_CELL
+    data['gre_scores_actions'] = NO_ACTION
+    if application.gre_status == 0:
+        data['gre_scores_status'] = COMPLETE_CELL
+        data['extra_comments'] += "GRE Complete"
+    elif application.gre_status == 6:
+        problem_with_application = True
+    else:
+        gre_button = "gre_detail_button"
+        data['gre_scores_actions'] = details_button(gre_button)
+        detail_content = "GRE scores not yet received by Graduate School."
+        data['extra_onready_js'] += details_js(gre_button, detail_content)
+    # TOEFL scores
+    data['toefl_scores_status'] = INCOMPLETE_CELL
+    data['toefl_scores_actions'] = NO_ACTION
+    if application.toefl_status == 0:
+        data['toefl_scores_status'] = COMPLETE_CELL
+        data['extra_comments'] += "TOEFL Complete"
+    elif application.toefl_status == 6:
+        problem_with_application = True
+    elif application.toefl_status == 5:
+        data['toefl_scores_status'] = NA_CELL
+    # References
+    data['references_status'] = INCOMPLETE_CELL
+    data['references_actions'] = NO_ACTION
+    num_references = len(Reference.objects.filter(attached_to=application))
+    if num_references < 3:
+        data['references_status'] = INCOMPLETE_CELL
+        button_id = "references_detail_button"
+        data['references_actions'] = '''<a class="btn btn-primary" href="/add_reference/"><i class="icon-pencil icon-white"></i> Add Reference</a> ''' + details_button(button_id)
+        data['extra_comments'] += "References Incomplete"
+        details_content = "References requested: " + str(num_references) + "/3.<br/>You must receive recommendations from 3 references."
+        data['extra_onready_js'] += details_js(button_id, details_content)
+    else:
+        references = Reference.objects.filter(attached_to=application)
+        references_pending = False
+        for reference in references:
+            if not reference.complete:
+                references_pending = True
+        if references_pending:
+            data['extra_comments'] += "References Pending"
+            data['references_status'] = PENDING_CELL
+            button_id = "references_detail_button"
+            data['references_actions'] = details_button(button_id)
+            details_content = "Awaiting replies from references."
+            data['extra_onready_js'] += details_js(button_id, details_content)
+        else:
+            data['extra_comments'] += "References Complete"
+            data['references_status'] = COMPLETE_CELL
+    # Resume
+    data['resume_status'] = INCOMPLETE_CELL
+    data['resume_actions'] = NO_ACTION
+    if application.resume:
+        data['resume_status'] = COMPLETE_CELL
+        data['resume_actions'] = '''<a class='btn' href='/upload_resume/'><i class='icon-retweet'></i> Resubmit</a>'''
+    if not application.resume:
+        data['resume_actions'] = '''<a class='btn btn-primary' href='/upload_resume/'><i class='icon-file icon-white'></i> Upload Resume</a>'''
+    # Letter of intent
+    data['letter_status'] = INCOMPLETE_CELL
+    data['letter_actions'] = NO_ACTION
+    if application.letter_of_intent:
+        data['letter_status'] = COMPLETE_CELL
+        data['letter_actions'] = '''<a class='btn' href='/upload_letter/'><i class='icon-retweet'></i> Resubmit</a>'''
+    if not application.letter_of_intent:
+        data['letter_actions'] = '''<a class='btn btn-primary' href='/upload_letter/'><i class='icon-file icon-white'></i> Upload Letter of Intent</a>'''
+        
+    if problem_with_application:
+        messages.error(request, "There is a problem with your application. Please contact the CSSE Graduate Officer.")
     return render_to_response('applicant_templates/view_application_template.html', data, RequestContext(request))
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def viewProfile(request):
     data = dict()
     return render_to_response('applicant_templates/profile_info_template.html', data, RequestContext(request))
+
+VALID_CONTENT_TYPES = (
+       "application/pdf",
+       "image/jpeg",
+       "application/msword",
+       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   )
+
+@permission_required('gwaap.is_gwaap_applicant', login_url="/login/")
+def uploadResume(request):
+    data = dict()
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    application = applicant.get_application()
+    if request.method == "POST":
+        if "resume" not in request.FILES:
+            messages.error(request, "Error submitting file.")
+            return HttpResponseRedirect('/upload_resume/')
+        # Verify content type
+        if request.FILES['resume'].content_type not in VALID_CONTENT_TYPES:
+            messages.error(request, "Resume must be in PDF, DOC, DOCX, or JPG formats.")
+            return HttpResponseRedirect('/upload_resume/')
+        application.resume = request.FILES['resume']
+        application.save()
+        applicant.save()
+        messages.success(request, "Resume uploaded.")
+        return HttpResponseRedirect("/view_application/")
+    return render_to_response('applicant_templates/upload_resume_template.html', data, RequestContext(request))
+
+@permission_required('gwaap.is_gwaap_applicant', login_url="/login/")
+def uploadLetter(request):
+    data = dict()
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    application = applicant.get_application()
+    if request.method == "POST":
+        if "letter" not in request.FILES:
+            messages.error(request, "Error submitting file.")
+            return HttpResponseRedirect('/upload_letter/')
+        if request.FILES['letter'].content_type not in VALID_CONTENT_TYPES:
+            messages.error(request, "Letter of intent must be in PDF, DOC, DOCX, or JPG formats.")
+            return HttpResponseRedirect('/upload_letter/')
+        application.letter_of_intent = request.FILES['letter']
+        application.save()
+        applicant.save()
+        messages.success(request, "Letter of intent uploaded.")
+        return HttpResponseRedirect('/view_application/')
+    return render_to_response('applicant_templates/upload_letter_template.html', data, RequestContext(request))

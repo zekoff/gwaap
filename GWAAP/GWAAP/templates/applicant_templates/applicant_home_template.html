@@ -2,8 +2,56 @@
 {% block title %}Applicant Home{% endblock %}
 
 {% block content %}
-<h1>Applicant Home</h1>
-<a href="/add_reference/">Add Reference</a>
+<h1>Application Status for {{ applicant.get_full_name|default:applicant.username }}</h1>
+<div class="span12">
+{% block status_graphic_area %}
+	<div class="row">
+		<table class="span12 gwaap_status_table">
+			<colgroup>
+				<col class="span2">
+				<col class="span2">
+				<col class="span2 column_highlight">
+				<col class="span2">
+				<col class="span2">
+				<col class="span2">
+			</colgroup>
+			<tbody>
+				<!--<tr>
+					<td>{{ status_0 }}</td>
+					<td>{{ status_1 }}</td>
+					<td>{{ status_2 }}</td>
+					<td>{{ status_3 }}</td>
+					<td>{{ status_4 }}</td>
+					<td>{{ status_5 }}</td>
+				</tr>-->
+				<tr>
+					<td colspan="6"><div class="progress progress-striped progress-success active gwaap_application_statusbar"><div class="bar" style="width: {{ progress_bar_width }};"></div></div></td>
+				</tr>
+				<tr>
+					<td class="{{ status_0 }}">1. Collecting information</td>
+					<td class="{{ status_1 }}">2. Undergoing initial review by GPO</td>
+					<td class="{{ status_2 }}">3. Undergoing review by admissions committee</td>
+					<td class="{{ status_3 }}">4. Undergoing decision by department</td>
+					<td class="{{ status_4 }}">5. Forwarded to Graduate School for final decision</td>
+					<td class="{{ status_5 }}">6. Complete</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	{% endblock status_graphic_area %}
+	<div class="row">
+		<br/>
+		<br/>
+		<div class="span6 offset3 well" style="text-align:center">
+		{% if application_complete %}
+			<p>No additional actions needed to complete application.</p>
+		{% else %}
+			<p>Additional actions needed to complete application.</p>
+			<p>Go to <a href="/view_application/">Application Details</a>.</p>
+		{% endif %}
+		</div>
+	</div>
+</div>
 {% endblock %}
 
 {% block comments %}

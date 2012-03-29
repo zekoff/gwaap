@@ -1,11 +1,25 @@
 body {
 	cursor: default;
-	background: url('gwaap_background.jpg');
-	overflow: scroll;
+	background: url('crosshash.jpg');
+	overflow-y: scroll;
 }
 
 h1 {
 	margin-bottom: .5em;
+}
+
+.gwaap_status_table td {
+	padding: 1em;
+	text-align: center;
+	vertical-align: top;
+}
+
+.gwaap_application_statusbar {
+	margin-bottom:0;
+}
+
+.gwaap_bold_cell {
+	font-weight: bold;
 }
 
 .gwaap_content_shadow {
@@ -28,13 +42,21 @@ h1 {
 	position: fixed;
 	bottom: 0;
 	width: 100%;
+	font-size: 1.5em;
+	font-weight: bold;
+	line-height: 1.5em;
+}
+
+.gwaap_reference_table td, .gwaap_reference_table th {
+	text-align:center;
+	vertical-align: middle;
 }
 
 .gwaap_application_detail_table td, .gwaap_application_detail_table th {
 	vertical-align: middle;
 	text-align: center;
-	margin-top: 1em;
-	margin-bottom: 1em;
+	/*margin-top: 2em;
+	margin-bottom: 2em;*/
 }
 
 .gwaap_application_detail_table .complete, .gwaap_application_detail_table .complete:hover {

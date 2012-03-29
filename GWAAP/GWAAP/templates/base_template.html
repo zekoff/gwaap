@@ -35,7 +35,7 @@
 {% if messages %}
 <div class="gwaap_outer_messages">
 <div class="container">
-	<div class="row span4 offset4">
+	<div class="row span6 offset3">
     {% for message in messages %}
 		<div class="alert fade-in {% ifequal message.tags 'error' %}alert-error{% else %}{% ifequal message.tags 'success' %}alert-success{% else %}alert-info{% endifequal %}{% endifequal %}">
 			<a class="close" data-dismiss="alert" href="#"><i class="icon-remove"></i></a>
@@ -52,6 +52,10 @@
 <script>
 $(document).ready(function() {
 	$(".alert").alert();
+	{{ extra_onready_js|safe }}
+});
+$(function () {
+	{{ extra_onready_js|safe }}
 });
 </script>
 <body>
