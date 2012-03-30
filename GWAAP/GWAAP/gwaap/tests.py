@@ -1,5 +1,5 @@
 from GWAAP.gwaap.models import ApplicantProfile, Reference, Comment, Vote, \
-    STATUS_CODE, RELATIVE_RANK, VOTE_CHOICES
+    STATUS_CODE, RELATIVE_RANK, VOTE_CHOICES, GwaapProfile
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.mail import send_mail
@@ -406,7 +406,232 @@ class ModelTests(TestCase):
         app.get_application().status = 0
         app.get_application().save()
         self.assertEqual(app.get_application().status, 0)
+        
+    def test_00500_profileModelExists(self):
+        app = Applicant.objects.create(username="app")
+        app_profile = app.get_profile()
+#        GwaapProfile.objects.create(applicant_profile=app_profile)
+        self.assertIsInstance(GwaapProfile.objects.get(applicant_profile=app_profile), GwaapProfile)
+        
+    def test_00510_applicantHasConvenienceMethodForProfile(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        gwaap_profile = app.get_gwaap_profile()
+        self.assertIsInstance(gwaap_profile, GwaapProfile)
+        
+    def test_00520_profileHasMiddleName(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.middle_name = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().middle_name, "middle")
 
+    def test_00530_profileHasStreet1(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.street1 = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().street1, "middle")
+
+    def test_00540_profileHasStreet2(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.street2 = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().street2, "middle")
+        
+    def test_00550_profileHasCity(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.city = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().city, "middle")
+        
+    def test_00560_profileHasProvince(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.province = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().province, "middle")
+        
+    def test_00570_profileHasState(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.state = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().state, "middle")
+        
+    def test_00570_profileHasCountry(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.country = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().country, "middle")
+        
+    def test_00580_profileHasZip(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.zip_code = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().zip_code, "middle")
+        
+    def test_00590_profileHasTelephone(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.phone = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().phone, "middle")
+        
+    def test_00600_profileHasBirthday(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.birthday = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().birthday, "middle")
+        
+    def test_00610_profileHasGender(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.gender = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().gender, "middle")
+        
+    def test_00620_profileHasCountry_Birth(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.country_birth = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().country_birth, "middle")
+        
+    def test_00630_profileHasCitizenship(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.citizenship = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().citizenship, "middle")
+        
+    def test_00640_profileHasRef_Number(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.ref_number = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().ref_number, "middle")
+        
+    def test_00650_profileHasDate_Apply(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.date_apply = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().date_apply, "middle")
+        
+    def test_00660_profileHasEnter_Qtr(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.enter_qtr = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().enter_qtr, "middle")
+        
+    def test_00670_profileHasEnter_YEAR(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.enter_year = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().enter_year, "middle")
+        
+    def test_00670_profileHasDegree(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.degree = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().degree, "middle")
+        
+    def test_00680_profileHasMajor(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.major = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().major, "middle")
+        
+    def test_00690_profileHasGRE_TAKEN(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.gre_taken = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().gre_taken, "middle")
+        
+    def test_00700_profileHasO_GRE_V(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_v = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_v, "middle")
+        
+    def test_00710_profileHasO_GRE_Q(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_q = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_q, "middle")
+        
+    def test_00720_profileHasO_GRE_A(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_a = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_a, "middle")
+        
+    def test_00730_profileHasO_GRE_W(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_w = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_w, "middle")
+        
+    def test_00740_profileHasTOEFL_TAKEN(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.toefl_taken = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().toefl_taken, "middle")
+        
+    def test_00750_profileHasO_TOEFL_SCORE(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_toefl_score = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_toefl_score, "middle")
+        
+    def test_00760_applicantsGetProfilesAutomatically(self):
+        app = Applicant.objects.create(username='app')
+        p = app.get_gwaap_profile()
+        self.assertIsInstance(p, GwaapProfile)
+        
 class ViewTests(TestCase):
     
     def getRequest(self, address):

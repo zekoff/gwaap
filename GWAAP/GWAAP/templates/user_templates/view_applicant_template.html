@@ -1,22 +1,113 @@
 {% extends 'user_templates/user_section_template.html' %}
 {% block title %}View Applicant{% endblock %}
 {% block content %}
-<h1>Applicant Details</h1>
-<div class="row well span8 offset2">
-	<table>
-		<tr>
-			<td><p><strong>Last name:</strong></p></td>
-			<td><p>{{ applicant.last_name }}</p></td>
-		</tr>
-		<tr>
-			<td><p><strong>First name:</strong></p></td>
-			<td><p>{{ applicant.first_name }}</p></td>
-		</tr>
-		<tr>
-			<td><p><strong>Username:</strong></p></td>
-			<td><p>{{ applicant.username }}</p></td>
-		</tr>
-	</table>
+<h1 class="pull-left">Details for {{ applicant.get_full_name|default:applicant.username }}</h1>
+<div class="row">
+	<div class="span12">
+		<ul id="tab" class="nav nav-tabs">
+			<li><a href="#application" id="appTab" data-toggle="tab">Application</a></li>
+			<li><a href="#profile" data-toggle="tab">Profile</a></li>
+			<li><a href="#comments" data-toggle="tab">Comments</a></li>
+			<div class="btn-group pull-right">
+			{% if perms.gwaap.can_comment %}
+				<a class="btn btn-primary" href="/user/make_comment/{{ applicant.pk }}/">Make Comment</a>
+			{% else %}
+				<button class="btn disabled">Make Comment</a>
+			{% endif %}
+			{% if perms.gwaap.can_vote %}
+				<a class="btn btn-primary" href="/user/cast_vote/{{ applicant.pk }}/">Cast Vote</a>
+			{% else %}
+				<button class="btn disabled">Cast Vote</a>
+			{% endif %}
+			</div>
+		</ul>
+		<div id="tabContent" class="tab-content">
+			<div class="tab-pane fade span8 offset2" id="application">
+				<h2>Resume</h2>
+				{% if application.resume %}
+				<a class="btn btn-primary" href="/{{ application.resume.url }}"><i class="icon-file icon-white"></i> Resume</a>
+				{% else %}
+				<p>No resume uploaded.</p>
+				{% endif %}
+				<h2>Letter of Intent</h2>
+				{% if application.letter_of_intent %}
+				<a class="btn btn-primary" href="/{{ application.letter_of_intent.url }}"><i class="icon-file icon-white"></i> Letter of Intent</a>
+				{% else %}
+				<p>No letter of intent uploaded.</p>
+				{% endif %}
+				<h2>References</h2>
+				{% if references %}
+					{% for ref in references %}
+					<div class="well">
+						<h3>Reference from {{ ref.name|default:"unknown" }}</h3>
+						<p>Affiliation: {{ ref.affiliation|default:"Not given" }}</p>
+						<table class="table">
+							<colgroup>
+								<col class="span3">
+								<col class="span5">
+							</colgroup>
+							<tbody>
+								<tr>
+									<td style="text-align:right"><strong>Integrity</strong></td>
+									<td>{% include "user_templates/convert_reference_fields_include.html" with field=ref.integrity only %}</td>
+								</tr>
+								<tr>
+									<td style="text-align:right"><strong>Software development ability</strong></td>
+									<td>{% include "user_templates/convert_reference_fields_include.html" with field=ref.development only %}</td>
+								</tr>
+								<tr>
+									<td style="text-align:right"><strong>Communication ability</strong></td>
+									<td>{% include "user_templates/convert_reference_fields_include.html" with field=ref.communication only %}</td>
+								</tr>
+								<tr>
+									<td style="text-align:right"><strong>Motivation</strong></td>
+									<td>{% include "user_templates/convert_reference_fields_include.html" with field=ref.motivation only %}</td>
+								</tr>
+								<tr>
+									<td style="text-align:right"><strong>Research potential</strong></td>
+									<td>{% include "user_templates/convert_reference_fields_include.html" with field=ref.research only %}</td>
+								</tr>
+							</tbody>
+						</table>
+						<p style="text-align:center"><strong>Overall recommendation: {% include "user_templates/convert_reference_overall_include.html" with field=ref.overall only %}</strong></p>
+						<p><strong>Comments:</strong></p>
+						{% if ref.comments %}
+						<p>{{ ref.comments }}
+						{% else %}
+						<p>None.</p>
+						{% endif %}
+					</div>
+					{% endfor %}
+				{% else %}
+				<p>No references completed.</p>
+				{% endif %}
+			</div>
+			<div class="tab-pane fade" id="profile">
+				<table class="table table-bordered table-striped">
+					<colgroup>
+						<col class="span3">
+						<col class="span9">
+					</colgroup>
+					<tbody>
+						{% for field in profile_fields %}
+						<tr>
+							{{ field|safe }}
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			<div class="tab-pane fade" id="comments">
+				{% if comments %}
+					{% for com in comments %}
+						<p class="well"><strong>{{ com.made_by.get_full_name|default:com.made_by.username }}:</strong> {{ com.content }}</p>
+					{% endfor %}
+				{% else %}
+				<p>No comments have been made on this applicant yet.</p>
+				{% endif %}
+			</div>
+		</div>
+	</div>
 </div>
 {% endblock %}
 {% block comments %}

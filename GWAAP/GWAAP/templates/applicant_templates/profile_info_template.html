@@ -3,10 +3,88 @@
 
 {% block content %}
 <h1>Profile Information</h1>
-<ul>
-	<li>Stuff</li>
-	<li>More stuff</li>
-</ul>
+<div class="row">
+	<div class="span8 offset2 well">
+		<p>All information associated with your GWAAP profile is located below. Some values (like address or phone number) can be modified. If you would like to update these values, you may make changes directly in the appropriate fields then click the "Update Profile" button at the bottom of the page.</p>
+	</div>
+</div>
+<form action="#" method="post">
+{% csrf_token %}
+<div class="row">
+	<div class="span4 offset2">
+		<label>FIRST</label>
+		{{ form_first_name|safe }}
+		<label>LAST</label>
+		{{ form_last_name|safe }}
+		<label>MIDDLE</label>
+		{{ form_middle_name|safe }}
+		<hr/>
+		<label>STREET1</label>
+		{{ form_street1|safe }}
+		<label>STREET2</label>
+		{{ form_street2|safe }}
+		<label>CITY</label>
+		{{ form_city|safe }}
+		<label>PROVINCE</label>
+		{{ form_province|safe }}
+		<label>STATE</label>
+		{{ form_state|safe }}
+		<label>COUNTRY</label>
+		{{ form_country|safe }}
+		<label>ZIP</label>
+		{{ form_zip_code|safe }}
+		<hr/>
+		<label>EMAIL</label>
+		{{ form_email|safe }}
+		<label>TELEPHONE</label>
+		{{ form_phone|safe }}
+		<label>BIRTHDAY</label>
+		{{ form_birthday|safe }}
+		<label>GENDER</label>
+		{{ form_gender|safe }}
+		<label>COUNTRY_BIRTH</label>
+		{{ form_country_birth|safe }}
+		<label>CITIZENSHIP</label>
+		{{ form_citizenship|safe }}
+	</div>
+	<div class="span4 offset1">
+		<label>REF_NUMBER</label>
+		{{ form_ref_number|safe }}
+		<label>DATE_APPLY</label>
+		{{ form_date_apply|safe }}
+		<hr/>
+		<label>ENTER_QTR</label>
+		{{ form_enter_qtr|safe }}
+		<label>ENTER_YEAR</label>
+		{{ form_enter_year|safe }}
+		<label>DEGREE</label>
+		{{ form_degree|safe }}
+		<label>MAJOR</label>
+		{{ form_major|safe }}
+		<hr/>
+		<label>GRE_TAKEN</label>
+		{{ form_gre_taken|safe }}
+		<label>O_GRE_V</label>
+		{{ form_o_gre_v|safe }}
+		<label>O_GRE_Q</label>
+		{{ form_o_gre_q|safe }}
+		<label>O_GRE_A</label>
+		{{ form_o_gre_a|safe }}
+		<label>O_GRE_W</label>
+		{{ form_o_gre_w|safe }}
+		<label>TOEFL_TAKEN</label>
+		{{ form_toefl_taken|safe }}
+		<label>O_TOEFL_SCORE</label>
+		{{ form_o_toefl_score|safe }}
+		<br/>
+	</div>
+</div>
+<div class="row">
+	<div class="span2 offset5" style="text-align:center">
+		<input type="submit" class="btn btn-primary" value="Update Profile" />
+	</div>
+</div>
+</form>
 {% endblock %}
 
 {% block comments %}

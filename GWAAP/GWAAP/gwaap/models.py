@@ -22,6 +22,8 @@ class Applicant(DjangoUser):
         )
     def get_application(self):
         return Application.objects.get(applicant_profile=self.get_profile())
+    def get_gwaap_profile(self):
+        return GwaapProfile.objects.get(applicant_profile=self.get_profile())
     def __unicode__(self):
         return self.username
     
@@ -92,7 +94,54 @@ class Reference(models.Model):
     def __unicode__(self):
         return 'Referral by ' + str(self.name) + ' on behalf of ' + str(self.attached_to.applicant_profile.user.username)
 
+class GwaapProfile(models.Model):
+    '''
+    This is the semantic representation of an applicant's profile information. It includes all fields
+    referred to in the GWAAP dump that aren't already covered by the Django User model (i.e. everything
+    except for first name, last name, and email).
+    There are localization and default options available through Django for some of these fields
+    (for instance, state) but they are represented here as pure character fields to accommodate
+    international students and blank fields where necessary. It appears that some could be boolean fields
+    or number fields as well, but they are implemented as CharFields here for similar reasons.
+    '''
+    applicant_profile = models.ForeignKey('ApplicantProfile', unique=True)
+    # First name in Django User model
+    # Last name in Django User model
+    middle_name = models.CharField(max_length=90, blank=True)
+    street1 = models.CharField(max_length=90, blank=True)
+    street2 = models.CharField(max_length=90, blank=True)
+    city = models.CharField(max_length=90, blank=True)
+    province = models.CharField(max_length=90, blank=True)
+    state = models.CharField(max_length=90, blank=True)
+    country = models.CharField(max_length=90, blank=True)
+    zip_code = models.CharField(max_length=30, blank=True)
+    # Email in Django User model
+    phone = models.CharField(max_length=30, blank=True)
+    birthday = models.CharField(max_length=30, blank=True)
+    gender = models.CharField(max_length=30, blank=True)
+    country_birth = models.CharField(max_length=90, blank=True)
+    citizenship = models.CharField(max_length=90, blank=True)
+    ref_number = models.CharField(max_length=90, blank=True)
+    date_apply = models.CharField(max_length=30, blank=True)
+    enter_qtr = models.CharField(max_length=30, blank=True)
+    enter_year = models.CharField(max_length=30, blank=True)
+    degree = models.CharField(max_length=90, blank=True)
+    major = models.CharField(max_length=90, blank=True)
+    gre_taken = models.CharField(max_length=30, blank=True)
+    o_gre_v = models.CharField(max_length=30, blank=True)
+    o_gre_q = models.CharField(max_length=30, blank=True)
+    o_gre_a = models.CharField(max_length=30, blank=True)
+    o_gre_w = models.CharField(max_length=30, blank=True)
+    toefl_taken = models.CharField(max_length=30, blank=True)
+    o_toefl_score = models.CharField(max_length=30, blank=True)
+
 class ApplicantProfile(models.Model):
+    '''
+    This is a Django-centric model whose only job is to link an Applicant with their Application
+    and GWAAP profile object. Those two objects hold references to this one as foreign keys. This
+    model has no semantic raison d'etre; it falls out of the Django User weirdness. It is referred
+    to in the settings.py file.
+    '''
     user = models.ForeignKey(DjangoUser, unique=True)
     def __unicode__(self):
         return "Django profile info for " + str(self.user.username)
@@ -106,7 +155,7 @@ class Comment(models.Model):
     made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.TextField()
     def __unicode__(self):
-        return "Comment on the application of " + str(self.attached_to.applicant_profile.username)
+        return "Comment on the application of " + str(self.attached_to.applicant_profile.user.username)
     
 VOTE_CHOICES = (
     (0, 'Strong Reject'),
@@ -124,13 +173,14 @@ class Vote(models.Model):
     made_by = models.ForeignKey(User, blank=True, null=True)
     content = models.PositiveSmallIntegerField(null=True, choices=VOTE_CHOICES)
     def __unicode__(self):
-        return VOTE_CHOICES[self.content][1] + " for " + str(self.attached_to.applicant_profile.user.username)
+        return VOTE_CHOICES[self.content][1] + " by " + str(self.made_by) + " for " + str(self.attached_to.applicant_profile.user.username)
     
 @receiver(post_save, sender=Applicant, dispatch_uid="multiple_dispatch_bugfix")
 def create_applicant(sender, instance, created, **kwargs):
     if created:
         applicantprofile = ApplicantProfile.objects.create(user=instance)
         Application.objects.create(applicant_profile=applicantprofile)
+        GwaapProfile.objects.create(applicant_profile=applicantprofile)
         applicant_permission = Permission.objects.get(codename="is_gwaap_applicant")
         instance.user_permissions.add(applicant_permission)
         

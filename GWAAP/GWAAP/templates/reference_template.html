@@ -9,7 +9,7 @@
 </style>
 <h1>Auburn University CSSE Reference Form</h1>
 <h2>On behalf of {{ applicant.get_full_name|default:applicant.username }}</h2>
-<p class="well">Please describe your experience with {{ applicant.get_full_name|default:applicant.username }}. Your comments will be used to help evaluate this candidate's fitness for acceptance into graduate school at Auburn University. All data will be kept confidential, and no part of this reference form will be made available to {{ applicant.get_full_name|default:"the applicant" }} at any time.</p>
+<p class="well">Please describe your experience with {{ applicant.get_full_name|default:applicant.username }}. Your comments will be used to help evaluate this candidate's fitness for acceptance into graduate school at Auburn University. All data will be kept confidential, and no part of this reference form will be made available to the applicant at any time.</p>
 <form action="#" method="POST">
 	{% csrf_token %}
 	<table class="table table-striped table-bordered gwaap_reference_table">

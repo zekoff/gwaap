@@ -3,9 +3,9 @@
 ###########################################
 # ******* NOTE / ATTN / HEADS UP ******** #
 ###########################################
-# The CSRF middleware has been deactivated to facilitate testing.
-# For a secure system, it must be reactivated before deployment
-# or the system could be vulnerable to CSRF.
+# All files uploaded by applicants are PUBLICLY ACCESSIBLE while the
+# DEBUG=True flag is set in this file. A true file server must be
+# set up for serving applicant files when the system is deployed.
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

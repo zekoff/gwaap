@@ -1,4 +1,5 @@
 from django.conf.urls.defaults import patterns, url
+from GWAAP import settings
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -28,3 +29,10 @@ urlpatterns = patterns('gwaap.views',
     #TEMP
     url(r'^test/$', 'testView'),
 )
+
+if settings.DEBUG:
+    urlpatterns += patterns('',
+        url(r'^(?P<path>.*)$', 'django.views.static.serve', {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+   )

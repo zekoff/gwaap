@@ -3,6 +3,9 @@
 
 {% block content %}
 <h1>Add Reference</h1>
+<div class="well">
+	<p>To request that someone serve as a reference on your behalf, enter their email address below. The potential reference will receive an email containing details on how to submit a reference form for you. You may wish to contact the potential reference before sending them an email to let them know that instructions are on the way.
+</div>
 <form action="#" method="POST">
 	{% csrf_token %}
 	<input type="text" name="email" placeholder="Email address" /><br />

@@ -21,7 +21,7 @@
 			<ul class="nav pull-right">
 				{% if user.is_authenticated %}
 					<li class="divider-vertical"></li>
-					<li><a><strong>{{ user.username }}</strong></a></li>
+					<li><a><i class="icon-user icon-white"></i> <strong>{{ user.username }}</strong></a></li>
 					<li><a href='/logout/'>Logout</a></li>
 				{% endif %}
 			</ul>

@@ -1,6 +1,6 @@
 # Create your views here.
 from GWAAP.gwaap.models import Reference, Application, Applicant, Comment, User, \
-    Vote
+    Vote, VOTE_CHOICES
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import permission_required
@@ -32,7 +32,30 @@ def displayApplicants(request):
 
 @permission_required('gwaap.is_gwaap_user', login_url='/user/login/')
 def viewApplicant(request, applicant_pk):
-    data = dict(applicant=Applicant.objects.get(pk=applicant_pk))
+    user = User.objects.get(pk=request.user.pk)
+    applicant = Applicant.objects.get(pk=applicant_pk)
+    profile = applicant.get_gwaap_profile()
+    application = applicant.get_application()
+    data = dict()
+    data['extra_onready_js'] = "$('#appTab').tab('show');"
+    data['user'] = user
+    data['applicant'] = applicant
+    data['profile'] = profile
+    data['application'] = application
+    data['comments'] = Comment.objects.filter(attached_to=application)
+    data['references'] = Reference.objects.filter(attached_to=application).filter(complete=True)
+    profile_fields = []
+    profile_fields.append("<td><strong>EMAIL</strong></td><td>" + str(applicant.email) + "</td>")
+    profile_fields.append("<td><strong>FIRST_NAME</strong></td><td>" + str(applicant.first_name) + "</td>")
+    profile_fields.append("<td><strong>LAST_NAME</strong></td><td>" + str(applicant.last_name) + "</td>")
+    for field in profile._meta.fields:
+        if field.name in ['id', 'applicant_profile']: continue
+        to_append = "<td><strong>"
+        to_append += str(field.name).upper()
+        to_append += "</strong></td><td>"
+        to_append += str(getattr(profile, str(field.name)))
+        profile_fields.append(to_append)
+    data['profile_fields'] = profile_fields
     return render_to_response('user_templates/view_applicant_template.html', data, RequestContext(request))
 
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
@@ -149,19 +172,29 @@ def makeComment(request, applicant_pk):
 
 @permission_required('gwaap.is_gwaap_user', login_url='/user/login/')
 def castVote(request, applicant_pk):
-    # Need to check if Vote for this Applicant already exists by this User
     if not request.user.has_perm("gwaap.can_vote"):
         messages.error(request, "You do not have permission to vote on applications.")
         return HttpResponseRedirect('/user/')
+    # Need to check if Vote for this Applicant already exists by this User
     applicant = Applicant.objects.get(pk=applicant_pk)
+    user = User.objects.get(pk=request.user.pk)
     data = dict(applicant=applicant)
+    existing_vote = Vote.objects.filter(attached_to=applicant.get_application()).filter(made_by=user)
     if request.method == "POST":
-        vote = Vote.objects.create(attached_to=applicant.get_application())
+        if len(existing_vote) == 0:
+            vote = Vote.objects.create(attached_to=applicant.get_application())
+        else:
+            vote = Vote.objects.filter(attached_to=applicant.get_application()).filter(made_by=user)[0]
         vote.content = int(request.POST['vote'])
         vote.made_by = User.objects.get(username=request.user.username)
         vote.save()
         messages.success(request, "Vote cast for " + str(applicant.get_full_name()))
         return HttpResponseRedirect('/user/view_applicant/' + str(applicant.pk) + '/')
+    if len(existing_vote) > 0:
+        messages.info(request, "You have already voted on this applicant. This vote will override your previous one.")
+    data['vote_choices'] = []
+    for choice in VOTE_CHOICES:
+        data['vote_choices'].append("<option value='" + str(choice[0]) + "'>" + str(choice[1]) + "</option>")
     return render_to_response('user_templates/cast_vote.html', data, RequestContext(request))
 
 def logoutView(request):
@@ -302,17 +335,84 @@ def viewApplication(request):
         messages.error(request, "There is a problem with your application. Please contact the CSSE Graduate Officer.")
     return render_to_response('applicant_templates/view_application_template.html', data, RequestContext(request))
 
+def form_field(placeholder="EMPTY", disabled=True, name=""):
+    css_class = "x-large"
+    if disabled:
+        css_class += " disabled"
+    control = "<input class='" + css_class + "' value='" + str(placeholder) + "' type='text' "
+    if disabled:
+        control += "disabled "
+    if name:
+        control += "name='" + str(name) + "' "
+    control += "/>"
+    return control
+
 @permission_required('gwaap.is_gwaap_applicant', login_url='/login/')
 def viewProfile(request):
     data = dict()
+    applicant = Applicant.objects.get(pk=request.user.pk)
+    profile = applicant.get_gwaap_profile()
+    application = applicant.get_application()
+    if request.method == "POST":
+        # Check for updates to selected fields, update if necessary
+        if profile.street1 != request.POST['street1']: profile.street1 = request.POST['street1']
+        if profile.street2 != request.POST['street2']: profile.street2 = request.POST['street2']
+        if profile.city != request.POST['city']: profile.city = request.POST['city']
+        if profile.province != request.POST['province']: profile.province = request.POST['province']
+        if profile.state != request.POST['state']: profile.state = request.POST['state']
+        if profile.country != request.POST['country']: profile.country = request.POST['country']
+        if profile.zip_code != request.POST['zip_code']: profile.zip_code = request.POST['zip_code']
+        if applicant.email != request.POST['email']: applicant.email = request.POST['email'] # validate?
+        if profile.phone != request.POST['phone']: profile.phone = request.POST['phone']
+        profile.save()
+        applicant.save()
+        messages.info(request, "Profile information updated.")
+    # start
+    data['applicant'] = applicant
+    data['profile'] = profile
+    data['application'] = application
+    data['form_first_name'] = form_field(applicant.first_name)
+    data['form_last_name'] = form_field(applicant.last_name)
+    data['form_middle_name'] = form_field(profile.middle_name)
+    # <hr/>
+    data['form_street1'] = form_field(profile.street1, False, "street1")
+    data['form_street2'] = form_field(profile.street2, False, "street2")
+    data['form_city'] = form_field(profile.city, False, "city")
+    data['form_province'] = form_field(profile.province, False, "province")
+    data['form_state'] = form_field(profile.state, False, "state")
+    data['form_country'] = form_field(profile.country, False, "country")
+    data['form_zip_code'] = form_field(profile.zip_code, False, "zip_code")
+    # <hr/>
+    data['form_email'] = form_field(applicant.email, False, "email")
+    data['form_phone'] = form_field(profile.phone, False, "phone")
+    data['form_birthday'] = form_field(profile.birthday)
+    data['form_gender'] = form_field(profile.gender)
+    data['form_country_birth'] = form_field(profile.country_birth)
+    data['form_citizenship'] = form_field(profile.citizenship)
+    # <hr/>
+    data['form_ref_number'] = form_field(profile.ref_number)
+    data['form_date_apply'] = form_field(profile.date_apply)
+    # <hr/>
+    data['form_enter_qtr'] = form_field(profile.enter_qtr)
+    data['form_enter_year'] = form_field(profile.enter_year)
+    data['form_degree'] = form_field(profile.degree)
+    data['form_major'] = form_field(profile.major)
+    # <hr/>
+    data['form_gre_taken'] = form_field(profile.gre_taken)
+    data['form_o_gre_v'] = form_field(profile.o_gre_v)
+    data['form_o_gre_q'] = form_field(profile.o_gre_q)
+    data['form_o_gre_a'] = form_field(profile.o_gre_a)
+    data['form_o_gre_w'] = form_field(profile.o_gre_w)
+    data['form_toefl_taken'] = form_field(profile.toefl_taken)
+    data['form_o_toefl_score'] = form_field(profile.o_toefl_score)
     return render_to_response('applicant_templates/profile_info_template.html', data, RequestContext(request))
 
 VALID_CONTENT_TYPES = (
-       "application/pdf",
-       "image/jpeg",
-       "application/msword",
-       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-   )
+    "application/pdf",
+    "image/jpeg",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+)
 
 @permission_required('gwaap.is_gwaap_applicant', login_url="/login/")
 def uploadResume(request):
