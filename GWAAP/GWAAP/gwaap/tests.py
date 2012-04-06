@@ -14,624 +14,7 @@ from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpRequest
 #from GWAAP.gwaap.views import userActions
 
-class ModelTests(TestCase):
-    
-    def getFreshApplicant(self, thisUsername="username"):
-        applicant = Applicant(username=thisUsername)
-#        applicant.save()
-#        ap = ApplicantProfile(user=applicant)
-#        ap.save()
-#        app = Application(applicant_profile=ap)
-#        app.save()
-        applicant.save()
-        return applicant
-    
-    def test_00010_userExists(self):
-        user = User()
-        self.assertIsInstance(user, User)
-    
-    def test_00020_userHasUsername(self):
-        user = User()
-        self.assertEqual(user.username, '')
-        
-    def test_00021_setUsername(self):
-        user = User()
-        user.username = "jimbob"
-        self.assertEqual(user.username, "jimbob")
-        
-    def test_00030_userNameWorks(self):
-        user = User()
-        user.first_name = "Joe"
-        user.last_name = "Tester"
-        self.assertEqual(user.get_full_name(), "Joe Tester")
 
-    def test_00040_userPassword(self):
-        user = User()
-        user.set_password("password42")
-        self.assertTrue(user.check_password("password42"))
-        
-    def test_00050_applicantExists(self):
-        applicant = Applicant()
-        self.assertIsInstance(applicant, Applicant)
-        
-    def test_00060_applicationExists(self):
-        app = Application()
-        self.assertIsInstance(app, Application)
-        
-#    def test_0070_applicationHasNameField(self):
-#        app = Application()
-#        app.first_name = "Joe"
-#        app.save()
-#        self.assertEqual(app.first_name, "Joe")
-
-#    def test_0071_applicationHasApplicantForeignKey(self):
-#        app = Application()
-#        applicant = Applicant()
-#        applicant.save()
-#        app.owner = applicant
-#        app.save()
-#        app = Application.objects.get(pk=1)
-#        self.assertEqual(applicant, app.owner)
-        
-    def test_00080_applicantProfileExists(self):
-        applicantProfile = ApplicantProfile()
-        self.assertIsInstance(applicantProfile, ApplicantProfile)
-        
-    def test_00090_applicantProfileIsModel(self):
-        ap = ApplicantProfile()
-        self.assertIsInstance(ap, django.db.models.Model)
-        
-    def test_00091_applicantProfileHasId(self):
-        app = Applicant(username="applicant")
-        app.save()
-        apID = app.get_profile().id
-        self.assertEqual(apID, 1)
-        
-    def test_00100_applicantHasProfile(self):
-        applicant = Applicant.objects.create(username="user")
-        applicant.save()
-        self.assertIsInstance(applicant.get_profile(), ApplicantProfile)
-        
-    def test_00101_gettingIdOfApplicant(self):
-        app = Applicant()
-        app.save()
-        appID = app.id
-        self.assertEqual(appID, 1)
-        
-#    def test_0102_gettingIdOfSecondApplicant(self):
-#        app = Applicant.objects.create()
-#        app.save()
-#        app2 = Applicant.objects.create()
-#        app2.save()
-#        appID = app2.id
-#        self.assertEqual(appID, 2)
-        
-        
-#This test really isn't asking anything I want to ask
-#    def test_0110_applicantProfileHasApplication(self):
-#        ap = ApplicantProfile()
-#        self.assertIsInstance(ap.get_profile(), Application)
-
-#    def test_0111_applicantHasProfileTwoCopies(self):
-#        applicant3 = Applicant.objects.create()
-#        applicant3.save()
-#        applicant2 = Applicant.objects.create()
-#        applicant2.save()
-#        self.assertIsInstance(applicant2.get_profile(), ApplicantProfile)
-
-    def test_00120_makeTwoApplicantsWithProfiles(self):
-        applicant = Applicant(username="mr. applicant")
-        applicant.save()
-        applicant2 = Applicant(username="mrs. applicant")
-        applicant2.save()
-        self.assertEqual(applicant2.id, 2)
-        
-    def test_00130_makeSingleApplicant(self):
-        applicant = Applicant(username="applicant")
-        applicant.save()
-        self.assertIsInstance(applicant, Applicant)
-
-    def test_00140_getApplicantById(self):
-        applicant = Applicant(username="applicant")
-        applicant.save()
-        appKey = Applicant.objects.get(username="applicant").pk
-        self.assertEqual(appKey, 1)
-        
-    def test_00150_getApplicantByIdMultipleApplicants(self):
-        applicant = Applicant(username="applicant")
-        applicant.save()
-        applicant = Applicant(username="applicant2")
-        applicant.save()
-        applicant = Applicant(username="applicant3")
-        applicant.save()
-        appKey = Applicant.objects.get(username="applicant2").pk
-        self.assertEqual(2, appKey)
-
-    def test_00160_duplicateUsernamesRaisesError(self):
-        applicant = Applicant(username="applicant")
-        applicant.save()
-        applicant = Applicant(username="applicant")
-        self.assertRaises(IntegrityError, applicant.save)
-        
-    def test_00170_deleteProfileAndCreateNewOne(self):
-        app = Applicant(username="name")
-        app.save()
-        ApplicantProfile.objects.get(user=app).delete()
-        ap = ApplicantProfile()
-        ap.user = app
-        ap.save()
-
-    def test_00180_applicantProfileHasApplication(self):
-        applicant = self.getFreshApplicant()
-        application = Application.objects.get(applicant_profile=applicant.get_profile())
-        self.assertIsInstance(application, Application)
-        
-#    def test_00190_trySignalProcessing(self):
-#        applicant = Applicant(username="name")
-#        applicant.save()
-#        self.assertEqual(Application.objects.get(applicant_profile=applicant.get_profile()).intTest, 1)
-        
-    def test_00200_getApplicationConvenienceMethod(self):
-        applicant = Applicant(username="user")
-        applicant.save()
-        self.assertIsInstance(applicant.get_application(), Application)
-        
-    def test_00210_referenceHasUniqueURL(self):
-        applicant = Applicant.objects.create(username="app")
-        ref = Reference.objects.create(attached_to=applicant.get_application())
-        correct_id = ref.unique_id
-        self.assertEqual(ref, Reference.objects.get(unique_id=correct_id))
-        
-    def test_00220_commentModelExists(self):
-        comment = Comment.objects.create(attached_to=Applicant.objects.create(username='test').get_application())
-        self.assertIsInstance(comment, Comment)
-        
-    def test_00230_commentForeignKeyIsApplication(self):
-        app = Applicant.objects.create(username='applicant')
-        comment = Comment.objects.create(attached_to=app.get_application())
-        self.assertIsInstance(comment.attached_to, Application)
-        
-    def test_00240_commentMadeByUser(self):
-        app = Applicant.objects.create(username='applicant')
-        user = User.objects.create(username='user')
-        comment = Comment.objects.create(attached_to=app.get_application())
-        comment.made_by = user
-        comment.save()
-        comment = Comment.objects.get(attached_to=app.get_application())
-        self.assertEqual(comment.made_by, user)
-        
-    def test_00250_commentContainsContent(self):
-        app = Applicant.objects.create(username='applicant')
-        comment = Comment.objects.create(attached_to=app.get_application())
-        comment.content = "This is a good applicant"
-        comment.save()
-        comment = Comment.objects.get(attached_to=app.get_application())
-        self.assertEqual(comment.content, "This is a good applicant")
-        
-    def test_00260_voteModelExists(self):
-        vote = Vote.objects.create(attached_to=Applicant.objects.create(username='app').get_application())
-        self.assertIsInstance(vote, Vote)
-        
-    def test_00270_voteMadeByUser(self):
-        app = Applicant.objects.create(username='app')
-        user = User.objects.create(username='user')
-        vote = Vote.objects.create(attached_to=app.get_application())
-        vote.made_by = user
-        vote.save()
-        vote = Vote.objects.get(attached_to=app.get_application())
-        self.assertIsInstance(vote.made_by, User)
-        
-    def test_00280_voteModelContainsVote(self):
-        app = Applicant.objects.create(username='app')
-        vote = Vote.objects.create(attached_to=app.get_application())
-        vote.content = 1
-        vote.save()
-        vote = Vote.objects.get(attached_to=app.get_application())
-        self.assertEqual(vote.content, 1)
-        
-    def test_00280_voteModelUnicodeGivesCorrectString(self):
-        app = Applicant.objects.create(username='app')
-        vote = Vote.objects.create(attached_to=app.get_application())
-        vote.content = 2
-        vote.save()
-        vote = Vote.objects.get(attached_to=app.get_application())
-        self.assertEqual(vote.__unicode__(), VOTE_CHOICES[2][1] + " for app")
-        
-    def test_00290_commentPermissionExists(self):
-        perm = Permission.objects.get(codename='can_comment')
-        self.assertIsInstance(perm, Permission)
-        
-    def test_00300_votePermissionExists(self):
-        perm = Permission.objects.get(codename='can_vote')
-        self.assertIsInstance(perm, Permission)
-        
-    def test_00310_referenceCanMakeFreeformComments(self):
-        applicant = Applicant.objects.create(username='applicant')
-        reference = Reference.objects.create(attached_to=applicant.get_application())
-        reference.comments = "good applicant"
-        reference.save()
-        refer = Reference.objects.get(attached_to=applicant.get_application())
-        self.assertEqual(refer.comments, "good applicant")
-        
-    def test_00320_manyToManyUserAndCommentRelationships(self):
-        user1 = User.objects.create(username='user1')
-        user2 = User.objects.create(username="user2")
-        applicant1 = Applicant.objects.create(username='applicant1')
-        applicant2 = Applicant.objects.create(username='applicant2')
-        comment11 = Comment.objects.create(attached_to=applicant1.get_application())
-        comment11.made_by = user1
-        comment11.save()
-        comment12 = Comment.objects.create(attached_to=applicant2.get_application())
-        comment12.made_by = user1
-        comment12.save()
-        comment21 = Comment.objects.create(attached_to=applicant1.get_application())
-        comment21.made_by = user2
-        comment21.save()
-        comment22 = Comment.objects.create(attached_to=applicant2.get_application())
-        comment22.made_by = user2
-        comment22.save()
-
-    def test_00330_manyToManyUserAndCommentRelationships(self):
-        user1 = User.objects.create(username='user1')
-        user2 = User.objects.create(username="user2")
-        applicant1 = Applicant.objects.create(username='applicant1')
-        applicant2 = Applicant.objects.create(username='applicant2')
-        comment11 = Vote.objects.create(attached_to=applicant1.get_application())
-        comment11.made_by = user1
-        comment11.save()
-        comment12 = Vote.objects.create(attached_to=applicant2.get_application())
-        comment12.made_by = user1
-        comment12.save()
-        comment21 = Vote.objects.create(attached_to=applicant1.get_application())
-        comment21.made_by = user2
-        comment21.save()
-        comment22 = Vote.objects.create(attached_to=applicant2.get_application())
-        comment22.made_by = user2
-        comment22.save()
-        
-    def test_00340_referenceModelContainsName(self):
-        app = Applicant.objects.create(username="app")
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.name = 'Mr. Reference'
-        ref.save()
-        ref = Reference.objects.get(attached_to=app.get_application())
-        self.assertEqual("Mr. Reference", ref.name)
-
-    def test_00350_referenceModelContainsAffiliation(self):
-        app = Applicant.objects.create(username="app")
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.affiliation = 'Big Company'
-        ref.save()
-        ref = Reference.objects.get(attached_to=app.get_application())
-        self.assertEqual("Big Company", ref.affiliation)
-        
-    def test_00360_applicationModelHasResumeFileField(self):
-        app = Applicant.objects.create(username='app')
-        application = app.get_application()
-        self.assertIsInstance(application.resume, FieldFile)
-        
-    def test_00370_applicationModelHasLetterOfIntentFileField(self):
-        app = Applicant.objects.create(username="app")
-        application = app.get_application()
-        self.assertIsInstance(application.letter_of_intent, FieldFile)
-
-# Passes, but disabled to prevent writing trash files to filesystem        
-#    def test_00380_applicationSavesFile(self):
-#        app = Applicant.objects.create(username="app")
-#        application = app.get_application()
-#        resume_file = File(file("resumefile", "w"))
-#        application.resume = resume_file
-#        application.save()
-#        app.save()
-#        self.assertIsInstance(app.get_application().resume, FieldFile)
-
-    def test_00390_modelsModuleHasStatusTuple(self):
-        status = 0
-        self.assertTrue("Complete" in STATUS_CODE[status])
-        
-    def test_00400_applicationModelHasGreStatusField(self):
-        app = Applicant.objects.create(username='app')
-        application = app.get_application()
-        application.gre_status = 0
-        application.save()
-        application = Applicant.objects.get(username='app').get_application()
-        self.assertTrue("Complete" in STATUS_CODE[application.gre_status])
-    
-    def test_00410_applicationModelHasToeflStatusField(self):
-        app = Applicant.objects.create(username='app')
-        application = app.get_application()
-        application.toefl_status = 1
-        application.save()
-        application = Applicant.objects.get(username='app').get_application()
-        self.assertTrue("Incomplete" in STATUS_CODE[application.toefl_status])
-        
-    def test_00420_applicationModelHasTranscriptStatusField(self):
-        app = Applicant.objects.create(username='app')
-        application = app.get_application()
-        application.transcript_status = 0
-        application.save()
-        application = Applicant.objects.get(username="app").get_application()
-        self.assertTrue("Complete" in STATUS_CODE[application.transcript_status])
-        
-    def test_00430_referenceHasIntegrityField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.integrity = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.integrity in RELATIVE_RANK[ref.integrity])
-
-    def test_00440_referenceHasDevelopmentField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.development = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.development in RELATIVE_RANK[ref.development])
-
-    def test_00450_referenceHasCommunicationField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.communication = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.communication in RELATIVE_RANK[ref.communication])
-
-    def test_00460_referenceHasMotivationField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.motivation = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.motivation in RELATIVE_RANK[ref.motivation])
-
-    def test_00470_referenceHasResearchField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.research = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.research in RELATIVE_RANK[ref.research])
-
-    def test_00480_referenceHasOverallField(self):
-        app = Applicant.objects.create(username='app')
-        ref = Reference.objects.create(attached_to=app.get_application())
-        ref.overall = 0
-        ref.save()
-        ref = Reference.objects.get(attached_to=app)
-        self.assertTrue(ref.overall in RELATIVE_RANK[ref.overall])
-        
-    def test_00490_applicationHasStatusField(self):
-        app = Applicant.objects.create(username="app")
-        app.get_application().status = 0
-        app.get_application().save()
-        self.assertEqual(app.get_application().status, 0)
-        
-    def test_00500_profileModelExists(self):
-        app = Applicant.objects.create(username="app")
-        app_profile = app.get_profile()
-#        GwaapProfile.objects.create(applicant_profile=app_profile)
-        self.assertIsInstance(GwaapProfile.objects.get(applicant_profile=app_profile), GwaapProfile)
-        
-    def test_00510_applicantHasConvenienceMethodForProfile(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        gwaap_profile = app.get_gwaap_profile()
-        self.assertIsInstance(gwaap_profile, GwaapProfile)
-        
-    def test_00520_profileHasMiddleName(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.middle_name = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().middle_name, "middle")
-
-    def test_00530_profileHasStreet1(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.street1 = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().street1, "middle")
-
-    def test_00540_profileHasStreet2(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.street2 = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().street2, "middle")
-        
-    def test_00550_profileHasCity(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.city = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().city, "middle")
-        
-    def test_00560_profileHasProvince(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.province = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().province, "middle")
-        
-    def test_00570_profileHasState(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.state = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().state, "middle")
-        
-    def test_00570_profileHasCountry(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.country = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().country, "middle")
-        
-    def test_00580_profileHasZip(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.zip_code = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().zip_code, "middle")
-        
-    def test_00590_profileHasTelephone(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.phone = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().phone, "middle")
-        
-    def test_00600_profileHasBirthday(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.birthday = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().birthday, "middle")
-        
-    def test_00610_profileHasGender(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.gender = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().gender, "middle")
-        
-    def test_00620_profileHasCountry_Birth(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.country_birth = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().country_birth, "middle")
-        
-    def test_00630_profileHasCitizenship(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.citizenship = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().citizenship, "middle")
-        
-    def test_00640_profileHasRef_Number(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.ref_number = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().ref_number, "middle")
-        
-    def test_00650_profileHasDate_Apply(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.date_apply = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().date_apply, "middle")
-        
-    def test_00660_profileHasEnter_Qtr(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.enter_qtr = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().enter_qtr, "middle")
-        
-    def test_00670_profileHasEnter_YEAR(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.enter_year = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().enter_year, "middle")
-        
-    def test_00670_profileHasDegree(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.degree = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().degree, "middle")
-        
-    def test_00680_profileHasMajor(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.major = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().major, "middle")
-        
-    def test_00690_profileHasGRE_TAKEN(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.gre_taken = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().gre_taken, "middle")
-        
-    def test_00700_profileHasO_GRE_V(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.o_gre_v = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().o_gre_v, "middle")
-        
-    def test_00710_profileHasO_GRE_Q(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.o_gre_q = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().o_gre_q, "middle")
-        
-    def test_00720_profileHasO_GRE_A(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.o_gre_a = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().o_gre_a, "middle")
-        
-    def test_00730_profileHasO_GRE_W(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.o_gre_w = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().o_gre_w, "middle")
-        
-    def test_00740_profileHasTOEFL_TAKEN(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.toefl_taken = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().toefl_taken, "middle")
-        
-    def test_00750_profileHasO_TOEFL_SCORE(self):
-        app = Applicant.objects.create(username="app")
-#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
-        p = app.get_gwaap_profile()
-        p.o_toefl_score = "middle"
-        p.save()
-        self.assertEqual(app.get_gwaap_profile().o_toefl_score, "middle")
-        
-    def test_00760_applicantsGetProfilesAutomatically(self):
-        app = Applicant.objects.create(username='app')
-        p = app.get_gwaap_profile()
-        self.assertIsInstance(p, GwaapProfile)
-        
 class ViewTests(TestCase):
     
     def getRequest(self, address):
@@ -1148,7 +531,7 @@ class ViewTests(TestCase):
         data = dict(vote=1)
         client.post('/user/cast_vote/1/', data)
         vote = Vote.objects.get(attached_to=applicant.get_application())
-        self.assertEqual(str(vote), 'Weak Reject for applicant')
+        self.assertEqual(str(vote), 'Weak Reject by user for applicant')
         
     def test_00580_castVoteGetIncludesForm(self):
         Applicant.objects.create(username='applicant')
@@ -1535,3 +918,623 @@ class ViewTests(TestCase):
         client = Client()
         response = client.get('/reference/' + str(ref.unique_id) + "/", follow=True)
         self.assertContains(response, "Thank you")
+        
+        
+class ModelTests(TestCase):
+    
+    def getFreshApplicant(self, thisUsername="username"):
+        applicant = Applicant(username=thisUsername)
+#        applicant.save()
+#        ap = ApplicantProfile(user=applicant)
+#        ap.save()
+#        app = Application(applicant_profile=ap)
+#        app.save()
+        applicant.save()
+        return applicant
+    
+    def test_00010_userExists(self):
+        user = User()
+        self.assertIsInstance(user, User)
+    
+    def test_00020_userHasUsername(self):
+        user = User()
+        self.assertEqual(user.username, '')
+        
+    def test_00021_setUsername(self):
+        user = User()
+        user.username = "jimbob"
+        self.assertEqual(user.username, "jimbob")
+        
+    def test_00030_userNameWorks(self):
+        user = User()
+        user.first_name = "Joe"
+        user.last_name = "Tester"
+        self.assertEqual(user.get_full_name(), "Joe Tester")
+
+    def test_00040_userPassword(self):
+        user = User()
+        user.set_password("password42")
+        self.assertTrue(user.check_password("password42"))
+        
+    def test_00050_applicantExists(self):
+        applicant = Applicant()
+        self.assertIsInstance(applicant, Applicant)
+        
+    def test_00060_applicationExists(self):
+        app = Application()
+        self.assertIsInstance(app, Application)
+        
+#    def test_0070_applicationHasNameField(self):
+#        app = Application()
+#        app.first_name = "Joe"
+#        app.save()
+#        self.assertEqual(app.first_name, "Joe")
+
+#    def test_0071_applicationHasApplicantForeignKey(self):
+#        app = Application()
+#        applicant = Applicant()
+#        applicant.save()
+#        app.owner = applicant
+#        app.save()
+#        app = Application.objects.get(pk=1)
+#        self.assertEqual(applicant, app.owner)
+        
+    def test_00080_applicantProfileExists(self):
+        applicantProfile = ApplicantProfile()
+        self.assertIsInstance(applicantProfile, ApplicantProfile)
+        
+    def test_00090_applicantProfileIsModel(self):
+        ap = ApplicantProfile()
+        self.assertIsInstance(ap, django.db.models.Model)
+        
+    def test_00091_applicantProfileHasId(self):
+        app = Applicant(username="applicant")
+        app.save()
+        apID = app.get_profile().id
+        self.assertEqual(apID, 1)
+        
+    def test_00100_applicantHasProfile(self):
+        applicant = Applicant.objects.create(username="user")
+        applicant.save()
+        self.assertIsInstance(applicant.get_profile(), ApplicantProfile)
+        
+    def test_00101_gettingIdOfApplicant(self):
+        app = Applicant()
+        app.save()
+        appID = app.id
+        self.assertEqual(appID, 1)
+        
+#    def test_0102_gettingIdOfSecondApplicant(self):
+#        app = Applicant.objects.create()
+#        app.save()
+#        app2 = Applicant.objects.create()
+#        app2.save()
+#        appID = app2.id
+#        self.assertEqual(appID, 2)
+        
+        
+#This test really isn't asking anything I want to ask
+#    def test_0110_applicantProfileHasApplication(self):
+#        ap = ApplicantProfile()
+#        self.assertIsInstance(ap.get_profile(), Application)
+
+#    def test_0111_applicantHasProfileTwoCopies(self):
+#        applicant3 = Applicant.objects.create()
+#        applicant3.save()
+#        applicant2 = Applicant.objects.create()
+#        applicant2.save()
+#        self.assertIsInstance(applicant2.get_profile(), ApplicantProfile)
+
+    def test_00120_makeTwoApplicantsWithProfiles(self):
+        applicant = Applicant(username="mr. applicant")
+        applicant.save()
+        applicant2 = Applicant(username="mrs. applicant")
+        applicant2.save()
+        self.assertEqual(applicant2.id, 2)
+        
+    def test_00130_makeSingleApplicant(self):
+        applicant = Applicant(username="applicant")
+        applicant.save()
+        self.assertIsInstance(applicant, Applicant)
+
+    def test_00140_getApplicantById(self):
+        applicant = Applicant(username="applicant")
+        applicant.save()
+        appKey = Applicant.objects.get(username="applicant").pk
+        self.assertEqual(appKey, 1)
+        
+    def test_00150_getApplicantByIdMultipleApplicants(self):
+        applicant = Applicant(username="applicant")
+        applicant.save()
+        applicant = Applicant(username="applicant2")
+        applicant.save()
+        applicant = Applicant(username="applicant3")
+        applicant.save()
+        appKey = Applicant.objects.get(username="applicant2").pk
+        self.assertEqual(2, appKey)
+
+    def test_00160_duplicateUsernamesRaisesError(self):
+        applicant = Applicant(username="applicant")
+        applicant.save()
+        applicant = Applicant(username="applicant")
+        self.assertRaises(IntegrityError, applicant.save)
+        
+    def test_00170_deleteProfileAndCreateNewOne(self):
+        app = Applicant(username="name")
+        app.save()
+        ApplicantProfile.objects.get(user=app).delete()
+        ap = ApplicantProfile()
+        ap.user = app
+        ap.save()
+
+    def test_00180_applicantProfileHasApplication(self):
+        applicant = self.getFreshApplicant()
+        application = Application.objects.get(applicant_profile=applicant.get_profile())
+        self.assertIsInstance(application, Application)
+        
+#    def test_00190_trySignalProcessing(self):
+#        applicant = Applicant(username="name")
+#        applicant.save()
+#        self.assertEqual(Application.objects.get(applicant_profile=applicant.get_profile()).intTest, 1)
+        
+    def test_00200_getApplicationConvenienceMethod(self):
+        applicant = Applicant(username="user")
+        applicant.save()
+        self.assertIsInstance(applicant.get_application(), Application)
+        
+    def test_00210_referenceHasUniqueURL(self):
+        applicant = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=applicant.get_application())
+        correct_id = ref.unique_id
+        self.assertEqual(ref, Reference.objects.get(unique_id=correct_id))
+        
+    def test_00220_commentModelExists(self):
+        comment = Comment.objects.create(attached_to=Applicant.objects.create(username='test').get_application())
+        self.assertIsInstance(comment, Comment)
+        
+    def test_00230_commentForeignKeyIsApplication(self):
+        app = Applicant.objects.create(username='applicant')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        self.assertIsInstance(comment.attached_to, Application)
+        
+    def test_00240_commentMadeByUser(self):
+        app = Applicant.objects.create(username='applicant')
+        user = User.objects.create(username='user')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        comment.made_by = user
+        comment.save()
+        comment = Comment.objects.get(attached_to=app.get_application())
+        self.assertEqual(comment.made_by, user)
+        
+    def test_00250_commentContainsContent(self):
+        app = Applicant.objects.create(username='applicant')
+        comment = Comment.objects.create(attached_to=app.get_application())
+        comment.content = "This is a good applicant"
+        comment.save()
+        comment = Comment.objects.get(attached_to=app.get_application())
+        self.assertEqual(comment.content, "This is a good applicant")
+        
+    def test_00260_voteModelExists(self):
+        vote = Vote.objects.create(attached_to=Applicant.objects.create(username='app').get_application())
+        self.assertIsInstance(vote, Vote)
+        
+    def test_00270_voteMadeByUser(self):
+        app = Applicant.objects.create(username='app')
+        user = User.objects.create(username='user')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.made_by = user
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertIsInstance(vote.made_by, User)
+        
+    def test_00280_voteModelContainsVote(self):
+        app = Applicant.objects.create(username='app')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.content = 1
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertEqual(vote.content, 1)
+        
+    def test_00280_voteModelUnicodeGivesCorrectString(self):
+        app = Applicant.objects.create(username='app')
+        vote = Vote.objects.create(attached_to=app.get_application())
+        vote.content = 2
+        vote.save()
+        vote = Vote.objects.get(attached_to=app.get_application())
+        self.assertEqual(vote.__unicode__(), VOTE_CHOICES[2][1] + " by None for app")
+        
+    def test_00290_commentPermissionExists(self):
+        perm = Permission.objects.get(codename='can_comment')
+        self.assertIsInstance(perm, Permission)
+        
+    def test_00300_votePermissionExists(self):
+        perm = Permission.objects.get(codename='can_vote')
+        self.assertIsInstance(perm, Permission)
+        
+    def test_00310_referenceCanMakeFreeformComments(self):
+        applicant = Applicant.objects.create(username='applicant')
+        reference = Reference.objects.create(attached_to=applicant.get_application())
+        reference.comments = "good applicant"
+        reference.save()
+        refer = Reference.objects.get(attached_to=applicant.get_application())
+        self.assertEqual(refer.comments, "good applicant")
+        
+    def test_00320_manyToManyUserAndCommentRelationships(self):
+        user1 = User.objects.create(username='user1')
+        user2 = User.objects.create(username="user2")
+        applicant1 = Applicant.objects.create(username='applicant1')
+        applicant2 = Applicant.objects.create(username='applicant2')
+        comment11 = Comment.objects.create(attached_to=applicant1.get_application())
+        comment11.made_by = user1
+        comment11.save()
+        comment12 = Comment.objects.create(attached_to=applicant2.get_application())
+        comment12.made_by = user1
+        comment12.save()
+        comment21 = Comment.objects.create(attached_to=applicant1.get_application())
+        comment21.made_by = user2
+        comment21.save()
+        comment22 = Comment.objects.create(attached_to=applicant2.get_application())
+        comment22.made_by = user2
+        comment22.save()
+
+    def test_00330_manyToManyUserAndCommentRelationships(self):
+        user1 = User.objects.create(username='user1')
+        user2 = User.objects.create(username="user2")
+        applicant1 = Applicant.objects.create(username='applicant1')
+        applicant2 = Applicant.objects.create(username='applicant2')
+        comment11 = Vote.objects.create(attached_to=applicant1.get_application())
+        comment11.made_by = user1
+        comment11.save()
+        comment12 = Vote.objects.create(attached_to=applicant2.get_application())
+        comment12.made_by = user1
+        comment12.save()
+        comment21 = Vote.objects.create(attached_to=applicant1.get_application())
+        comment21.made_by = user2
+        comment21.save()
+        comment22 = Vote.objects.create(attached_to=applicant2.get_application())
+        comment22.made_by = user2
+        comment22.save()
+        
+    def test_00340_referenceModelContainsName(self):
+        app = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.name = 'Mr. Reference'
+        ref.save()
+        ref = Reference.objects.get(attached_to=app.get_application())
+        self.assertEqual("Mr. Reference", ref.name)
+
+    def test_00350_referenceModelContainsAffiliation(self):
+        app = Applicant.objects.create(username="app")
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.affiliation = 'Big Company'
+        ref.save()
+        ref = Reference.objects.get(attached_to=app.get_application())
+        self.assertEqual("Big Company", ref.affiliation)
+        
+    def test_00360_applicationModelHasResumeFileField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        self.assertIsInstance(application.resume, FieldFile)
+        
+    def test_00370_applicationModelHasLetterOfIntentFileField(self):
+        app = Applicant.objects.create(username="app")
+        application = app.get_application()
+        self.assertIsInstance(application.letter_of_intent, FieldFile)
+
+# Passes, but disabled to prevent writing trash files to filesystem        
+#    def test_00380_applicationSavesFile(self):
+#        app = Applicant.objects.create(username="app")
+#        application = app.get_application()
+#        resume_file = File(file("resumefile", "w"))
+#        application.resume = resume_file
+#        application.save()
+#        app.save()
+#        self.assertIsInstance(app.get_application().resume, FieldFile)
+
+    def test_00390_modelsModuleHasStatusTuple(self):
+        status = 0
+        self.assertTrue("Complete" in STATUS_CODE[status])
+        
+    def test_00400_applicationModelHasGreStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.gre_status = 0
+        application.save()
+        application = Applicant.objects.get(username='app').get_application()
+        self.assertTrue("Complete" in STATUS_CODE[application.gre_status])
+    
+    def test_00410_applicationModelHasToeflStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.toefl_status = 1
+        application.save()
+        application = Applicant.objects.get(username='app').get_application()
+        self.assertTrue("Incomplete" in STATUS_CODE[application.toefl_status])
+        
+    def test_00420_applicationModelHasTranscriptStatusField(self):
+        app = Applicant.objects.create(username='app')
+        application = app.get_application()
+        application.transcript_status = 0
+        application.save()
+        application = Applicant.objects.get(username="app").get_application()
+        self.assertTrue("Complete" in STATUS_CODE[application.transcript_status])
+        
+    def test_00430_referenceHasIntegrityField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.integrity = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.integrity in RELATIVE_RANK[ref.integrity])
+
+    def test_00440_referenceHasDevelopmentField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.development = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.development in RELATIVE_RANK[ref.development])
+
+    def test_00450_referenceHasCommunicationField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.communication = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.communication in RELATIVE_RANK[ref.communication])
+
+    def test_00460_referenceHasMotivationField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.motivation = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.motivation in RELATIVE_RANK[ref.motivation])
+
+    def test_00470_referenceHasResearchField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.research = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.research in RELATIVE_RANK[ref.research])
+
+    def test_00480_referenceHasOverallField(self):
+        app = Applicant.objects.create(username='app')
+        ref = Reference.objects.create(attached_to=app.get_application())
+        ref.overall = 0
+        ref.save()
+        ref = Reference.objects.get(attached_to=app)
+        self.assertTrue(ref.overall in RELATIVE_RANK[ref.overall])
+        
+    def test_00490_applicationHasStatusField(self):
+        app = Applicant.objects.create(username="app")
+        app.get_application().status = 0
+        app.get_application().save()
+        self.assertEqual(app.get_application().status, 0)
+        
+    def test_00500_profileModelExists(self):
+        app = Applicant.objects.create(username="app")
+        app_profile = app.get_profile()
+#        GwaapProfile.objects.create(applicant_profile=app_profile)
+        self.assertIsInstance(GwaapProfile.objects.get(applicant_profile=app_profile), GwaapProfile)
+        
+    def test_00510_applicantHasConvenienceMethodForProfile(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        gwaap_profile = app.get_gwaap_profile()
+        self.assertIsInstance(gwaap_profile, GwaapProfile)
+        
+    def test_00520_profileHasMiddleName(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.middle_name = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().middle_name, "middle")
+
+    def test_00530_profileHasStreet1(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.street1 = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().street1, "middle")
+
+    def test_00540_profileHasStreet2(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.street2 = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().street2, "middle")
+        
+    def test_00550_profileHasCity(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.city = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().city, "middle")
+        
+    def test_00560_profileHasProvince(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.province = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().province, "middle")
+        
+    def test_00570_profileHasState(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.state = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().state, "middle")
+        
+    def test_00570_profileHasCountry(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.country = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().country, "middle")
+        
+    def test_00580_profileHasZip(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.zip_code = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().zip_code, "middle")
+        
+    def test_00590_profileHasTelephone(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.phone = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().phone, "middle")
+        
+    def test_00600_profileHasBirthday(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.birthday = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().birthday, "middle")
+        
+    def test_00610_profileHasGender(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.gender = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().gender, "middle")
+        
+    def test_00620_profileHasCountry_Birth(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.country_birth = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().country_birth, "middle")
+        
+    def test_00630_profileHasCitizenship(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.citizenship = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().citizenship, "middle")
+        
+    def test_00640_profileHasRef_Number(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.ref_number = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().ref_number, "middle")
+        
+    def test_00650_profileHasDate_Apply(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.date_apply = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().date_apply, "middle")
+        
+    def test_00660_profileHasEnter_Qtr(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.enter_qtr = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().enter_qtr, "middle")
+        
+    def test_00670_profileHasEnter_YEAR(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.enter_year = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().enter_year, "middle")
+        
+    def test_00670_profileHasDegree(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.degree = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().degree, "middle")
+        
+    def test_00680_profileHasMajor(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.major = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().major, "middle")
+        
+    def test_00690_profileHasGRE_TAKEN(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.gre_taken = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().gre_taken, "middle")
+        
+    def test_00700_profileHasO_GRE_V(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_v = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_v, "middle")
+        
+    def test_00710_profileHasO_GRE_Q(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_q = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_q, "middle")
+        
+    def test_00720_profileHasO_GRE_A(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_a = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_a, "middle")
+        
+    def test_00730_profileHasO_GRE_W(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_gre_w = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_gre_w, "middle")
+        
+    def test_00740_profileHasTOEFL_TAKEN(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.toefl_taken = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().toefl_taken, "middle")
+        
+    def test_00750_profileHasO_TOEFL_SCORE(self):
+        app = Applicant.objects.create(username="app")
+#        GwaapProfile.objects.create(applicant_profile=app.get_profile())
+        p = app.get_gwaap_profile()
+        p.o_toefl_score = "middle"
+        p.save()
+        self.assertEqual(app.get_gwaap_profile().o_toefl_score, "middle")
+        
+    def test_00760_applicantsGetProfilesAutomatically(self):
+        app = Applicant.objects.create(username='app')
+        p = app.get_gwaap_profile()
+        self.assertIsInstance(p, GwaapProfile)
+        

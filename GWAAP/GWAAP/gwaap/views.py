@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
+from django.core.mail import send_mail
 
 @permission_required('gwaap.is_gwaap_user', login_url="/user/login/")
 def userActions(request):
@@ -113,6 +114,26 @@ def applicantAddReference(request):
         ref = Reference.objects.create(attached_to=application)
         ref.email = request.POST['email']
         ref.save()
+        gwaap_address = "http://gwaap.auburn.edu/"
+        email_message = '''
+        To whom it may concern:
+        
+        A request that you serve as a reference has been made by an applicant to the graduate program
+        in the Auburn University Computer Science and Software Engineering department. Clicking the 
+        link below will take you to the recommendation form on the CSSE graduate application website.
+        The form consists of six multiple-choice questions asking you to describe your experience with
+        the applicant, as well as an optional box for additional comments.
+        
+        Your comments will not be seen by the applicant at any time, and the form can be completed in
+        less than two minutes.
+        
+        Thank you in advance for your contribution to the process of evaluating applicants here at
+        Auburn University. Details on the applicant and a link to the form can be found below:
+        
+        '''
+        email_message += "Applicant name: " + str(applicant.get_full_name())
+        email_message += "\nLink to private recommendation form: " + gwaap_address + "reference/" + str(ref.unique_id) + "/"
+        send_mail("Recommendation request from " + applicant.get_full_name(), email_message, 'gwaap@auburn.edu', [ref.email])
         messages.success(request, "Reference added.")
         messages.info(request, "Email sent to " + str(request.POST['email']))
         return HttpResponseRedirect('/view_application/')

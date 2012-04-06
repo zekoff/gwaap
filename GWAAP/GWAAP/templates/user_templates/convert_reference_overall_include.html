@@ -1,0 +1,25 @@
+{# Convert Reference overall numbers to strings #}
+
+{% if field == 0 %}
+Do not recommend
+{% endif %}
+
+{% if field == 1 %}
+Recommend with reservations
+{% endif %}
+
+{% if field == 2 %}
+Recommend
+{% endif %}
+
+{% if field == 3 %}
+Strongly recommend
+{% endif %}
+
+{% if field == 4 %}
+Lower 50%
+{% endif %}
+
+{% if field == 5 %}
+Not observed
+{% endif %}
