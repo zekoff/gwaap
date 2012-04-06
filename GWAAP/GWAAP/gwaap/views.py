@@ -4,7 +4,7 @@ from GWAAP.gwaap.models import Reference, Application, Applicant, Comment, User,
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import permission_required
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse #@UnusedImport
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.core.mail import send_mail

@@ -9,10 +9,8 @@ from django.test import TestCase
 from django.test.client import Client, RequestFactory
 from models import Applicant, Application, User
 import django.db.models
-from django.core.files.base import File
-from django.core.files.uploadedfile import UploadedFile
-from django.http import HttpRequest
-#from GWAAP.gwaap.views import userActions
+from django.core.files.base import File #@UnusedImport
+from django.core.files.uploadedfile import UploadedFile #@UnusedImport
 
 
 class ViewTests(TestCase):
@@ -843,7 +841,7 @@ class ViewTests(TestCase):
         app = Applicant.objects.create(username='app')
         app.set_password('pass')
         app.save()
-        for x in range(3):
+        for x in range(3): #@UnusedVariable
             Reference.objects.create(attached_to=app.get_application())
         client = Client()
         client.login(username='app', password='pass')
@@ -854,7 +852,7 @@ class ViewTests(TestCase):
         app = Applicant.objects.create(username='app')
         app.set_password('pass')
         app.save()
-        for x in range(2):
+        for x in range(2): #@UnusedVariable
             Reference.objects.create(attached_to=app.get_application())
         client = Client()
         client.login(username='app', password='pass')
@@ -865,7 +863,7 @@ class ViewTests(TestCase):
         app = Applicant.objects.create(username='app')
         app.set_password('pass')
         app.save()
-        for x in range(3):
+        for x in range(3): #@UnusedVariable
             ref = Reference.objects.create(attached_to=app.get_application())
             ref.complete = True
             ref.save()
